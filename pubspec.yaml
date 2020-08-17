@@ -1,8 +1,9 @@
 name: zwbase_flutter
-description: 按之前的习惯封装了一些常用的基础方法,尤其是控制器
+description: 按之前的习惯封装了一些常用的基础方法,尤其是控制器.还有列表刷新,HUD,sheet,alertbox等等
+
 version: 0.0.1
 author: CQZW
-homepage: 
+homepage: https://github.com/CQZW/zwbase_flutter
 
 environment:
   sdk: ">=2.7.0 <3.0.0"

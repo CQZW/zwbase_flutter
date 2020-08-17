@@ -1,6 +1,6 @@
 # zwbase_flutter
 
-A new Flutter package project.
+按之前的习惯封装了一些常用的基础方法,尤其是控制器.还有列表刷新,HUD,sheet,alertbox等等
 
 ## Getting Started
 
