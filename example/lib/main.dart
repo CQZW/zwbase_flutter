@@ -1,0 +1,242 @@
+import 'package:flutter/material.dart';
+import 'package:zwbase_flutter/zwbase_flutter.dart';
+
+void main() {
+  BaseTabBarVC vc = BaseTabBarVC();
+
+  HomeVC homevc = HomeVC();
+  homevc.iAMNavRootView();
+  homevc.mPageName = "主页";
+  homevc.title = "主页";
+
+  MeVC mevc = MeVC();
+  mevc.iAMNavRootView();
+  mevc.mPageName = "个人中心";
+  mevc.title = "个人中心";
+
+  vc.tabitem_txt = <String>["主页", "个人中心"];
+  vc.tabitme_icon = [Icons.home, Icons.message];
+  vc.tabitme_vc = <BaseVC>[homevc, mevc];
+
+  runApp(vc.getView());
+  //runApp(homevc.getView());
+}
+
+class HomeVC extends BaseVC {
+  HomeVC() : super() {
+    this.listvc = ZWRefreshListVC(this, id: 0, islistview: false);
+    this.listvc.mHasFooter = true;
+    // int x = 0;
+    // do {
+    //   this.mDataArr.add("aa");
+    // } while (x-- > 0);
+  }
+
+  int _testv = 1;
+  ZWRefreshListVC listvc;
+
+  Widget makePageBody(BuildContext context) {
+    return this.listvc.getView();
+  }
+
+  @override
+  Widget onListViewGetItemView(int listid, int index) {
+    return Center(child: Text("cell at : $index"));
+  }
+
+  @override
+  double onListViewGetItemHeight(int listid) {
+    return 50;
+  }
+
+  @override
+  Future<Object> onHeaderStartRefresh(int listid) {
+    return Future.delayed(Duration(seconds: 2), () {
+      this.mDataArr.clear();
+      this.mDataArr.add("aa");
+      this.mDataArr.add("aa");
+
+      //listvc.updateListVC();
+      return Future.value(2);
+    });
+  }
+
+  @override
+  Future<Object> onFooterStartRefresh(int listid) {
+    return Future.delayed(Duration(seconds: 2), () {
+      this.mDataArr.add("bb");
+      this.mDataArr.add("bb");
+      return 2;
+    });
+  }
+
+  void clicked_bt() {
+    _testv++;
+    updateUI();
+  }
+
+  int reloadcount = 0;
+  @override
+  void onDebugReLoad() {
+    super.onDebugReLoad();
+    reloadcount++;
+    this.title = "主页$reloadcount";
+    //this.hudShowLoading("加载中...");
+    //this.hudShowErrMsg("msg1111111111");
+    //this.hudShowSuccessMsg("12312312312");
+    //this.hudShowInfoMsg("msg");
+    //this.hudDismiss();
+    //this.showAlert("title", "msg" ,null);
+    //this.showAlertInput("title").then((value) => log("sss:"+value) );
+    //this.showSheet("title", ["选择1","选择2","选择3","选择4"] ).then((value) =>log(" sel:" + value.toString() ));
+
+    // NetWapper.shareClient().postPath("App/token", {
+    //   "sid": "0ED6EFB419A542C786C5003C7857B196",
+    //   "client": "app"
+    // }).then((SResBase resb) {});
+
+    // String ss =
+    //     "{\"status\":false,\"data\":\"\",\"msg\":\"\u8bf7\u586b\u5199sid\",\"loginStatus\":0}";
+    // Map<String, dynamic> aaa = json.decode(ss);
+    // SResBase.baseWithData(aaa);
+  }
+
+  void clicked_push() {
+    ForPush vc = ForPush();
+    vc.mPageName = "forpush";
+    vc.itid = 1;
+    pushToVC(vc);
+  }
+
+  void clicked_present() {
+    ForPush vc = ForPush();
+    vc.mPageName = "forpush";
+    vc.itid = 1;
+    presentVC(vc);
+  }
+}
+
+class MeVC extends BaseVC {
+  int _testv = 1;
+  Widget makePageBody(BuildContext context) {
+    return Center(
+        child: Column(children: <Widget>[
+      Row(children: [
+        IconButton(icon: Icon(Icons.add), onPressed: clicked_bt),
+        Text("now v is $_testv" +
+            " tab at : " +
+            tabbar_current_selected.toString())
+      ]),
+      IconButton(icon: Icon(Icons.share), onPressed: clicked_push),
+      FlatButton(onPressed: () => this.setto_vc(), child: Text("set to vc")),
+      FlatButton(
+          onPressed: () => this.presend_vc(), child: Text("prsent to vc")),
+      FlatButton(
+          onPressed: () {
+            hudShowSuccessMsg("show ok");
+          },
+          child: Text("show hud success")),
+      FlatButton(
+          onPressed: () {
+            hudShowErrMsg("show err");
+          },
+          child: Text("show hud err")),
+      FlatButton(
+          onPressed: () {
+            hudShowInfoMsg("show info");
+          },
+          child: Text("show hud info")),
+      FlatButton(
+          onPressed: () {
+            hudShowLoading("show loading...");
+            Future.delayed(Duration(seconds: 2), () {
+              hudDismiss();
+            });
+          },
+          child: Text("show hud loading")),
+      FlatButton(
+        onPressed: () {
+          showAlert("alertbox", "alert");
+        },
+        child: Text(
+          "show alert",
+          style: TextStyle(fontSize: 15),
+        ),
+      ),
+      FlatButton(
+          onPressed: () {
+            showAlertInput("inputalert", "输入holder");
+          },
+          child: Text(
+            "show alert input",
+            style: TextStyle(fontSize: 15),
+          )),
+      FlatButton(
+          onPressed: () {
+            showSheet("Sheet", ["选择1", "选择2"]);
+          },
+          child: Text("show sheet")),
+    ]));
+  }
+
+  void clicked_bt() {
+    _testv++;
+    updateUI();
+  }
+
+  void clicked_push() {
+    ForPush vc = ForPush();
+    vc.mPageName = "forpush";
+    vc.itid = 2;
+    pushToVC(vc);
+  }
+
+  void setto_vc() {
+    ForPush vc = ForPush();
+    vc.mPageName = "for set";
+    vc.itid = 3;
+    setToVC(vc);
+  }
+
+  void presend_vc() {
+    ForPush vc = ForPush();
+    vc.mPageName = "for prsent";
+    vc.itid = 4;
+    presentVC(vc);
+  }
+
+  @override
+  void onDebugReLoad() {
+    super.onDebugReLoad();
+    this.title = "个人中心1";
+    this.mHidenBackBt = true;
+  }
+}
+
+class ForPush extends BaseVC {
+  int itid = 0;
+  @override
+  Widget makePageBody(BuildContext context) {
+    return Center(
+        child: Row(children: <Widget>[
+      Text("test for  $itid"),
+      IconButton(icon: Icon(Icons.share), onPressed: clicked_push)
+    ]));
+  }
+
+  void clicked_push() {
+    ForPush vc = ForPush();
+    vc.mPageName = "forpush2222";
+    vc.itid = this.itid + 1;
+    pushToVC(vc);
+  }
+
+  @override
+  void onLeftBtClicked() {
+    // TODO: implement onLeftBtClicked
+    if (itid < 5)
+      super.onLeftBtClicked();
+    else
+      popToRoot();
+  }
+}
