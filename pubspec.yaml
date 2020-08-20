@@ -1,8 +1,8 @@
 name: zwbase_flutter
 description: 按之前的习惯封装了一些常用的基础方法,尤其是控制器.还有列表刷新,HUD,sheet,alertbox等等
 
-version: 0.0.1
-author: CQZW
+version: 0.0.2
+author: CQZW <physicsme123@gmail.com>
 homepage: https://github.com/CQZW/zwbase_flutter
 
 environment:
@@ -12,7 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  dio: ^ 3.0.0
+  dio: ^3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -23,6 +23,9 @@ dev_dependencies:
 
 # The following section is specific to Flutter.
 flutter:
+  
+  #用了几个图标
+  uses-material-design: true
 
   # To add assets to your package, add an assets section, like this:
   # assets:

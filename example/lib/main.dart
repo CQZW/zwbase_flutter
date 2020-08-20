@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:zwbase_flutter/zwbase_flutter.dart';
 
@@ -30,13 +32,36 @@ class HomeVC extends BaseVC {
     // do {
     //   this.mDataArr.add("aa");
     // } while (x-- > 0);
+
+    this.banner = ZWBanner();
+    this.banner.onItemClicked = (index, item) {
+      log("clicked:$index ");
+    };
+    this.banner.items = [];
+    this.banner.items.add(ZWBannerItem(
+        url:
+            "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1597829250129&di=e86401ba718eab1547647287f0d7b5ce&imgtype=0&src=http%3A%2F%2Fpic.feizl.com%2Fupload%2Fallimg%2F170614%2F0913162K0-3.jpg",
+        txt: "哒哒哒哒哒哒",
+        defimg: AssetImage("assets/default_video.png")));
+    this.banner.items.add(ZWBannerItem(
+        url:
+            "https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=379850206,786648567&fm=26&gp=0.jpg",
+        txt: "bbbbbb",
+        defimg: AssetImage("assets/default_video.png")));
   }
 
   int _testv = 1;
   ZWRefreshListVC listvc;
 
+  ZWBanner banner;
+
   Widget makePageBody(BuildContext context) {
-    return this.listvc.getView();
+    return Column(
+      children: <Widget>[
+        this.banner.getView(),
+        Expanded(flex: 1, child: this.listvc.getView())
+      ],
+    );
   }
 
   @override

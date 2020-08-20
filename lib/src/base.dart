@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 import 'zwhud.dart';
 import 'zwrefreshlistvc.dart';
@@ -31,14 +33,34 @@ abstract class ViewCtr {
     _state?.setState(() {});
   }
 
-  ///初始化被调用
+  ///初始化被调用,状态的initState被执行
+  @mustCallSuper
   void onInitVC() {
     log("onInitVC");
   }
 
-  ///调试重新热加载
+  ///调试重新热加载,reassemble被执行
+  @mustCallSuper
   void onDebugReLoad() {
     log("onDebugReLoad...");
+  }
+
+  ///创建组件完成,中途变化的子组件变化,不会被执行,
+  @mustCallSuper
+  void onDidBuild() {
+    log("onDidBuild");
+  }
+
+  ///被移除了显示,比如需要停止些动画什么的,deactivate被执行
+  @mustCallSuper
+  void onDidRemoved() {
+    log("onDidRemoved");
+  }
+
+  ///state的dispose被执行,被释放的时候
+  @mustCallSuper
+  void onDispose() {
+    log("onDispose");
   }
 
   ///是否自动保留,否则页面隐藏不显示的时候被移除了tree..,主要是tabbar的子页面
@@ -49,7 +71,7 @@ abstract class ViewCtr {
 abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   //获取控制器对应的视图
   Widget getView({Key key}) {
-    assert(mPageName != null);
+    assert(mPageName != null, "为页面取个名字");
     //如果是导航的根view,那么需要包裹一层导航视图,
     if (_bIsNavRootVC)
       return BaseNavView(vc: this, view: BaseView(key: key, vc: this));
@@ -250,6 +272,9 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   bool _bIsNavRootVC = false;
   void iAMNavRootView() {
     _bIsNavRootVC = true;
+
+    ///如果是导航的rootview,通常自动把返回按钮隐藏了
+    mHidenBackBt = true;
   }
 
   ///页面的返回值
@@ -320,15 +345,37 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
     assert(leftbtstr != null || rightbtstr != null);
     var acts = <Widget>[];
     var _c = new Completer<int>();
-    if (leftbtstr != null)
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      if (leftbtstr != null)
+        acts.add(CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => {extOverlayer = null, _c.complete(0)},
+            child: Text(leftbtstr)));
+      acts.add(CupertinoDialogAction(
+          onPressed: () => {extOverlayer = null, _c.complete(1)},
+          child: Text(rightbtstr)));
+    } else {
+      if (leftbtstr != null)
+        acts.add(FlatButton(
+            onPressed: () => {extOverlayer = null, _c.complete(0)},
+            child: Text(leftbtstr)));
       acts.add(FlatButton(
-          onPressed: () => {extOverlayer = null, _c.complete(0)},
-          child: Text(leftbtstr)));
-    acts.add(FlatButton(
-        onPressed: () => {extOverlayer = null, _c.complete(1)},
-        child: Text(rightbtstr)));
-    extOverlayer =
-        AlertDialog(title: Text(title), content: Text(msg), actions: acts);
+          onPressed: () => {extOverlayer = null, _c.complete(1)},
+          child: Text(rightbtstr)));
+    }
+
+    extOverlayer = Container(
+        color: Colors.transparent,
+        constraints: BoxConstraints(
+            minWidth: double.infinity, minHeight: double.infinity),
+        child: defaultTargetPlatform == TargetPlatform.iOS
+            ? CupertinoAlertDialog(
+                title: Text(title),
+                content: Text(msg),
+                actions: acts,
+              )
+            : AlertDialog(
+                title: Text(title), content: Text(msg), actions: acts));
     return _c.future;
   }
 
@@ -345,13 +392,30 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
         controller: _input_ctr,
         autofocus: true,
         decoration: InputDecoration(hintText: holder));
-    acts.add(FlatButton(
-        onPressed: () => {extOverlayer = null, _c.complete("")},
-        child: Text(leftbtstr)));
-    acts.add(FlatButton(
-        onPressed: () => {extOverlayer = null, _c.complete(_input_ctr.text)},
-        child: Text(rightbtstr)));
-    extOverlayer = AlertDialog(title: Text(title), content: _t, actions: acts);
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      acts.add(CupertinoDialogAction(
+          isDestructiveAction: true,
+          onPressed: () => {extOverlayer = null, _c.complete("")},
+          child: Text(leftbtstr)));
+      acts.add(CupertinoDialogAction(
+          onPressed: () => {extOverlayer = null, _c.complete(_input_ctr.text)},
+          child: Text(rightbtstr)));
+    } else {
+      acts.add(SimpleDialogOption(
+          onPressed: () => {extOverlayer = null, _c.complete("")},
+          child: Text(leftbtstr)));
+      acts.add(SimpleDialogOption(
+          onPressed: () => {extOverlayer = null, _c.complete(_input_ctr.text)},
+          child: Text(rightbtstr)));
+    }
+    extOverlayer = Container(
+        color: Colors.transparent,
+        constraints: BoxConstraints(
+            minWidth: double.infinity, minHeight: double.infinity),
+        child: defaultTargetPlatform == TargetPlatform.iOS
+            ? CupertinoAlertDialog(
+                title: Text(title), content: _t, actions: acts)
+            : AlertDialog(title: Text(title), content: _t, actions: acts));
     return _c.future;
   }
 
@@ -437,13 +501,38 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   ZWGridInfo onGridViewGetConfig(int gridid) => ZWGridInfo.noramlInfo();
 }
 
-///视图中间件...
+class BaseElement extends StatefulElement {
+  BaseElement(StatefulWidget widget) : super(widget);
+
+  @override
+  void performRebuild() {
+    Element _old;
+    visitChildren((element) {
+      _old = element;
+    });
+
+    super.performRebuild();
+    Element _new;
+    visitChildren((element) {
+      _new = element;
+    });
+
+    if (_old != _new) {
+      (widget as BaseView).vc.onDidBuild();
+    }
+  }
+}
+
+///视图中间件...串联控制器的地方将控制器和state链接起来
 // ignore: must_be_immutable
 class BaseView extends StatefulWidget {
   ViewCtr vc;
   BaseView({Key key, this.vc}) : super(key: key);
+
   @override
   State<BaseView> createState() => BaseState();
+  @override
+  StatefulElement createElement() => BaseElement(this);
 }
 
 ///导航View,默认会添加名为 root 的路由表,用于返回首页
@@ -487,6 +576,18 @@ class BaseState extends State<BaseView> with AutomaticKeepAliveClientMixin {
     super.reassemble();
     widget.vc.onDebugReLoad();
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+    widget.vc.onDispose();
+  }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+    widget.vc.onDidRemoved();
+  }
 }
 
 ///封装的tabbar控制器
@@ -499,9 +600,12 @@ class BaseTabBarVC extends BaseVC {
   // ignore: non_constant_identifier_names
   var tabitem_txt = <String>[];
 
-  ///底部tabbar的图标列表
+  ///底部tabbar的图标列表,如果是string就是图标名字,否则是IconData
   // ignore: non_constant_identifier_names
   var tabitme_icon = [];
+
+  ///底部未选中情况下图片
+  var tabitme_icon_unselected = [];
 
   ///底部tabbar 对应的每个VC
   // ignore: non_constant_identifier_names
@@ -517,7 +621,7 @@ class BaseTabBarVC extends BaseVC {
   }
 
 // ignore: non_constant_identifier_names
-  Color _tabbar_item_selected_color = Colors.amber[800];
+  Color tabbar_item_selected_color = Colors.amber[800];
   Widget makeBottomBar(BuildContext context) {
     assert(tabitem_txt.length != 0 || tabitme_icon.length != 0);
     assert(tabitem_txt.length == tabitme_icon.length);
@@ -527,14 +631,32 @@ class BaseTabBarVC extends BaseVC {
       items.add(BottomNavigationBarItem(
           title: Text(tabitem_txt[i]),
           icon: (_icon is String
-              ? ImageIcon(AssetImage(tabitme_icon[i]))
+              ? Image(
+                  image: AssetImage(tabitme_icon_unselected[i]),
+                  height: 36,
+                  width: 36,
+                )
+              : Icon(_icon)),
+          activeIcon: (_icon is String
+              ? Image(
+                  image: AssetImage(tabitme_icon[i]),
+                  width: 36,
+                  height: 36,
+                )
               : Icon(_icon))));
     }
+    return cfgBottomBar(items, context);
+  }
+
+  ///单独将配置底部的方法提出来方便继承
+  Widget cfgBottomBar(
+      List<BottomNavigationBarItem> items, BuildContext context) {
     return BottomNavigationBar(
         onTap: (value) => onTabbarItemClicked(value),
         items: items,
         currentIndex: tabbar_current_selected,
-        selectedItemColor: _tabbar_item_selected_color);
+        selectedItemColor: tabbar_item_selected_color,
+        type: BottomNavigationBarType.fixed);
   }
 
   @override
