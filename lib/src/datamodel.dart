@@ -27,10 +27,3 @@ class SResBase {
     mData = data["data"];
   }
 }
-
-abstract class SAutoEx {
-  SAutoEx(Map obj) {
-    fetchItWithObj(obj);
-  }
-  void fetchItWithObj(Map obj);
-}
