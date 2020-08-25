@@ -36,39 +36,53 @@ abstract class ViewCtr {
   ///初始化被调用,状态的initState被执行
   @mustCallSuper
   void onInitVC() {
-    log("onInitVC");
+    vclog("onInitVC");
   }
 
   ///调试重新热加载,reassemble被执行
   @mustCallSuper
   void onDebugReLoad() {
-    log("onDebugReLoad...");
+    vclog("onDebugReLoad...");
   }
+
+  ///是否完成了至少一次build
+  bool mIsDidBuildOnce;
 
   ///创建组件完成,中途变化的子组件变化,不会被执行,
   @mustCallSuper
   void onDidBuild() {
     log("onDidBuild");
+    mIsDidBuildOnce = true;
   }
 
   ///被移除了显示,比如需要停止些动画什么的,deactivate被执行
   @mustCallSuper
   void onDidRemoved() {
-    log("onDidRemoved");
+    vclog("onDidRemoved");
   }
 
   ///state的dispose被执行,被释放的时候
   @mustCallSuper
   void onDispose() {
-    log("onDispose");
+    vclog("onDispose");
   }
 
   ///是否自动保留,否则页面隐藏不显示的时候被移除了tree..,主要是tabbar的子页面
   bool wantKeepAlive = false;
+
+  ///日志输出
+  vclog(String msg) {
+    log(msg);
+  }
 }
 
 ///基础控制器
 abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
+  @override
+  vclog(String msg) {
+    log(msg, name: mPageName);
+  }
+
   //获取控制器对应的视图
   Widget getView({Key key}) {
     assert(mPageName != null, "为页面取个名字");
