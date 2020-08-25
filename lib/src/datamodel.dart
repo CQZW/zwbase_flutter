@@ -2,6 +2,9 @@ class SResBase {
   bool get mSuccess => mCode == 0;
   int mCode;
   String mMsg;
+
+  ///这里应该使用泛型之类的,,但是不喜欢到处是尖括号
+  ///使用as转换下
   Object mData;
 
   SResBase.infoWithOKString(String okstr) {

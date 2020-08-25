@@ -41,30 +41,30 @@ class NetWapper {
   }
 
   Future<SResBase> postPath(String path, Map parameters) async {
-    String url = makeApiPath(path);
-    Map<String, dynamic> header = Map();
-    String token = getToken();
-    Map reqparam;
-    if (parameters != null)
-      reqparam = Map.from(parameters);
-    else
-      reqparam = Map();
+    try {
+      String url = makeApiPath(path);
+      Map<String, dynamic> header = Map();
+      String token = getToken();
+      Map reqparam;
+      if (parameters != null)
+        reqparam = Map.from(parameters);
+      else
+        reqparam = Map();
 
-    if (token != null) {
-      header["authorization"] = "Bearer " + token;
-    }
-    log("req url:" +
-        _dio.options.baseUrl +
-        url +
-        " param:" +
-        reqparam.toString());
-    Response<String> resb = await _dio.post(url,
-        data: parameters, options: Options(headers: header));
-    if (resb != null) {
-      log("resb url:" + url + " data:" + resb.data);
-      return SResBase.baseWithData(json.decode(resb.data));
-    } else {
-      return SResBase.infoWithErrorString("网络请求错误");
+      if (token != null) {
+        header["authorization"] = "Bearer " + token;
+      }
+      log("req url:" + _g_baseurl + url + " param:" + reqparam.toString());
+      Response<String> resb = await _dio.post(url,
+          data: parameters, options: Options(headers: header));
+      if (resb != null) {
+        log("resb url:" + url + " data:" + resb.data);
+        return SResBase.baseWithData(json.decode(resb.data));
+      } else {
+        return SResBase.infoWithErrorString("网络请求错误");
+      }
+    } catch (e) {
+      return SResBase.infoWithErrorString("网络请求异常");
     }
   }
 
