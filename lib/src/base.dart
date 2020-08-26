@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 
 import 'zwhud.dart';
 import 'zwrefreshlistvc.dart';
+import 'package:meta/meta.dart';
 
 ///这里是参考之前IOS的基类,将常用的方法封装了
 abstract class ViewCtr {
@@ -17,7 +18,7 @@ abstract class ViewCtr {
   Widget vcBuildWidget(BuildContext context, BaseState state) {
     _context = context;
     _state = state;
-    if (!mIsDidBuildOnce) onPreBuild();
+    if (!mIsDidBuildOnce) onPreBuild(context);
     return realBuildWidget(context);
   }
 
@@ -49,10 +50,15 @@ abstract class ViewCtr {
   ///是否完成了至少一次build
   bool mIsDidBuildOnce = false;
 
+  Size mScreenSize;
+
   ///第一次Build即将调用
   @mustCallSuper
-  void onPreBuild() {
+  void onPreBuild(BuildContext context) {
     vclog("onPreBuild");
+    if (mScreenSize == null) {
+      mScreenSize = MediaQuery.of(context).size;
+    }
   }
 
   ///创建组件完成,中途变化的子组件变化,不会被执行,
