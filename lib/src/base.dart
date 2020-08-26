@@ -17,6 +17,7 @@ abstract class ViewCtr {
   Widget vcBuildWidget(BuildContext context, BaseState state) {
     _context = context;
     _state = state;
+    if (!mIsDidBuildOnce) onPreBuild();
     return realBuildWidget(context);
   }
 
@@ -46,12 +47,18 @@ abstract class ViewCtr {
   }
 
   ///是否完成了至少一次build
-  bool mIsDidBuildOnce;
+  bool mIsDidBuildOnce = false;
+
+  ///第一次Build即将调用
+  @mustCallSuper
+  void onPreBuild() {
+    vclog("onPreBuild");
+  }
 
   ///创建组件完成,中途变化的子组件变化,不会被执行,
   @mustCallSuper
   void onDidBuild() {
-    log("onDidBuild");
+    vclog("onDidBuild");
     mIsDidBuildOnce = true;
   }
 
@@ -172,8 +179,9 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   ///创建主要的控件部分,导航栏,tabbar,返回按钮,右侧按钮,标题等,底部tabbar由外部创建传入即可
   Widget realBuildWidget(BuildContext context) {
     Widget t = Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: makeTopBar(context),
-        body: makePageBody(context),
+        body: wapperForExt(makePageBody(context), context),
         bottomNavigationBar: tabbar_Widget);
     if (extOverlayer != null) {
       //如果有扩展覆盖层,那么就用stack堆积起来
@@ -184,17 +192,42 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
       );
     }
     return MaterialApp(
-        title: BaseVC.mappname,
-        home: t,
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
-        ));
+        title: BaseVC.mappname, home: t, theme: getThemeData(context));
+  }
+
+  ///获取主题数据
+  ThemeData getThemeData(BuildContext context) {
+    return ThemeData(
+      //primarySwatch: Colors.blue,
+      visualDensity: VisualDensity.adaptivePlatformDensity,
+    );
   }
 
   ///正常创建页面业务控件的地方,子类继承并且修改这个,
   ///就是之前的build方法里面创建body的部分
   Widget makePageBody(BuildContext context);
+
+  ///是否需要键盘处理,比如有输入框,滚动视图,输入状态点击空白消失
+  bool mEnableKeyBoardHelper = false;
+
+  Widget wapperForKeyBoard(Widget body, BuildContext context) {
+    return GestureDetector(
+      child: SingleChildScrollView(child: body),
+      onTap: () => onTapedWhenKeyBoardShow(),
+    );
+  }
+
+  ///用于控制输入焦点.处理键盘
+  FocusNode mFocusNode = FocusNode();
+  void onTapedWhenKeyBoardShow() {
+    mFocusNode.unfocus();
+  }
+
+  ///方便扩展处理,
+  Widget wapperForExt(Widget body, BuildContext context) {
+    if (mEnableKeyBoardHelper) return wapperForKeyBoard(body, context);
+    return body;
+  }
 
   ///用于扩展显示覆盖层,比如,HUD,
   Widget _extOverlayer;
@@ -703,7 +736,7 @@ class BaseTabBarVC extends BaseVC {
 
   @override
   Widget makePageBody(BuildContext context) {
-    // TODO: implement makePageBody
+    //这个不需要了,直接 重新了 realBuildWidget
     throw UnimplementedError();
   }
 }
