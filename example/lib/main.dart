@@ -59,8 +59,39 @@ class HomeVC extends BaseVC {
     return Column(
       children: <Widget>[
         this.banner.getView(),
-        Expanded(flex: 1, child: this.listvc.getView())
+        //Expanded(flex: 1, child: this.listvc.getView())
+        FlatButton(
+          onPressed: () => {},
+          child: Text("FlatButton"),
+        ),
+        IconButton(
+          icon: Icon(Icons.add),
+          onPressed: () => {},
+          color: Colors.white,
+        ),
+        RaisedButton.icon(
+            onPressed: () => {},
+            icon: Icon(Icons.local_airport),
+            label: Text("RaisedButton")),
+        Text("Text")
       ],
+    );
+  }
+
+  @override
+  ThemeData getThemeData(BuildContext context) {
+    return ThemeData(
+      primarySwatch: Colors.pink,
+      buttonColor: Colors.orange, //按钮填充背景颜色,
+      textTheme: TextTheme(
+          bodyText2: TextStyle(color: Colors.white), //普通的text的前景色
+          button: TextStyle(
+            color: Colors.white,
+          )),
+      scaffoldBackgroundColor: Colors.red,
+
+      ///APP的空白地方背景色
+      visualDensity: VisualDensity.adaptivePlatformDensity,
     );
   }
 
@@ -138,6 +169,13 @@ class HomeVC extends BaseVC {
     vc.mPageName = "forpush";
     vc.itid = 1;
     presentVC(vc);
+  }
+
+  MediaQueryData mMediaQueryData;
+  @override
+  void onDidBuild() {
+    super.onDidBuild();
+    mMediaQueryData = MediaQuery.of(this.getContext());
   }
 }
 

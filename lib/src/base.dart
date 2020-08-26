@@ -50,15 +50,10 @@ abstract class ViewCtr {
   ///是否完成了至少一次build
   bool mIsDidBuildOnce = false;
 
-  Size mScreenSize;
-
   ///第一次Build即将调用
   @mustCallSuper
   void onPreBuild(BuildContext context) {
     vclog("onPreBuild");
-    if (mScreenSize == null) {
-      mScreenSize = MediaQuery.of(context).size;
-    }
   }
 
   ///创建组件完成,中途变化的子组件变化,不会被执行,
@@ -95,6 +90,8 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   vclog(String msg) {
     log(msg, name: mPageName);
   }
+
+  BuildContext getContext() => _context;
 
   //获取控制器对应的视图
   Widget getView({Key key}) {
