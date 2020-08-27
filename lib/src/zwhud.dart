@@ -64,7 +64,7 @@ class ZWHud extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                   decoration: TextDecoration.none,
-                                  fontSize: 20,
+                                  fontSize: 18,
                                   color: frontColor)))
                     ]))));
   }

@@ -200,8 +200,19 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
 
   ///获取主题数据
   ThemeData getThemeData(BuildContext context) {
+    ///主题这玩意感觉太复杂了,flutter有自己的逻辑,如果设计不是这种思路,就太麻烦了
+    ///比如按钮,看 button_theme.dart 源码,textcolor设置,不是简单的设置,是根据各个情况来自己设置的,
     return ThemeData(
-      //primarySwatch: Colors.blue,
+      ///主题颜色,比如 导航栏背景 通常是最能表明一个App主题的,
+      ///FloatingActionButton背景色也是这里
+      primarySwatch: Colors.blue,
+      //buttonColor: Colors.green,//RaisedButton的背景色,下面也可以设置
+      //buttonTheme: ButtonTheme.of(context).copyWith(buttonColor: Colors.white, textTheme: ButtonTextTheme.primary),
+
+      //textTheme: TextTheme(bodyText2: TextStyle(color: Colors.white)), //普通的text的前景色
+      scaffoldBackgroundColor: Colors.white,
+
+      ///APP的空白地方背景色
       visualDensity: VisualDensity.adaptivePlatformDensity,
     );
   }
