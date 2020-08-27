@@ -206,7 +206,10 @@ class MeVC extends BaseVC {
           child: Text("show hud loading")),
       FlatButton(
         onPressed: () {
-          showAlert("alertbox", "alert");
+          showAlert(
+            "alertbox",
+            "alert",
+          );
         },
         child: Text(
           "show alert",

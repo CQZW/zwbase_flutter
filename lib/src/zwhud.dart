@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class ZWHud extends StatelessWidget {
@@ -28,8 +32,10 @@ class ZWHud extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget _ind;
     if (showType == 0)
-      _ind = CircularProgressIndicator(
-          valueColor: new AlwaysStoppedAnimation<Color>(frontColor));
+      _ind = defaultTargetPlatform == TargetPlatform.iOS
+          ? CupertinoActivityIndicator()
+          : CircularProgressIndicator(
+              valueColor: new AlwaysStoppedAnimation<Color>(frontColor));
     else if (showType == 1)
       _ind = Icon(Icons.done, size: 36, color: frontColor);
     else if (showType == 2)
@@ -64,7 +70,7 @@ class ZWHud extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                   decoration: TextDecoration.none,
-                                  fontSize: 18,
+                                  fontSize: 15,
                                   color: frontColor)))
                     ]))));
   }

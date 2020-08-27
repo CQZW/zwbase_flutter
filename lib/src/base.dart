@@ -32,7 +32,7 @@ abstract class ViewCtr {
 
   ///控制器更新数据,就是setstate
   void updateUI() {
-    if (!kReleaseMode && _state == null) {
+    if (!kReleaseMode && _state == null && mIsDidBuildOnce) {
       vclog("maybe update when state is null");
     }
     _state?.setState(() {});
@@ -76,6 +76,9 @@ abstract class ViewCtr {
   @mustCallSuper
   void onDispose() {
     vclog("onDispose");
+
+    ///返回之后,直接将 _state 置空,防止继续更新
+    _state = null;
   }
 
   ///是否自动保留,否则页面隐藏不显示的时候被移除了tree..,主要是tabbar的子页面
@@ -91,7 +94,7 @@ abstract class ViewCtr {
 abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   @override
   vclog(String msg) {
-    log(msg, name: mPageName);
+    log(msg, name: mPageName ?? '');
   }
 
   BuildContext getContext() => _context;
@@ -352,9 +355,6 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   void popBack() {
     if (Navigator.of(this._context).canPop()) {
       Navigator.pop(_context, mRetVal);
-
-      ///返回之后,直接将 _state 置空,防止继续更新
-      _state = null;
       return;
     }
     log("can not pop ,now is root");
@@ -415,26 +415,29 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   ///显示对话框,返回点击事件索引,0:取消,1:确定
   Future<int> showAlert(String title, String msg,
       [String leftbtstr = "取消", String rightbtstr = "确定"]) {
-    assert(leftbtstr != null || rightbtstr != null);
     var acts = <Widget>[];
     var _c = new Completer<int>();
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      if (leftbtstr != null)
-        acts.add(CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () => {extOverlayer = null, _c.complete(0)},
-            child: Text(leftbtstr)));
-      acts.add(CupertinoDialogAction(
-          onPressed: () => {extOverlayer = null, _c.complete(1)},
-          child: Text(rightbtstr)));
+    if (leftbtstr == null && rightbtstr == null) {
+      ///无确定的对话框...一直挡住
     } else {
-      if (leftbtstr != null)
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        if (leftbtstr != null)
+          acts.add(CupertinoDialogAction(
+              isDestructiveAction: true,
+              onPressed: () => {extOverlayer = null, _c.complete(0)},
+              child: Text(leftbtstr)));
+        acts.add(CupertinoDialogAction(
+            onPressed: () => {extOverlayer = null, _c.complete(1)},
+            child: Text(rightbtstr)));
+      } else {
+        if (leftbtstr != null)
+          acts.add(FlatButton(
+              onPressed: () => {extOverlayer = null, _c.complete(0)},
+              child: Text(leftbtstr)));
         acts.add(FlatButton(
-            onPressed: () => {extOverlayer = null, _c.complete(0)},
-            child: Text(leftbtstr)));
-      acts.add(FlatButton(
-          onPressed: () => {extOverlayer = null, _c.complete(1)},
-          child: Text(rightbtstr)));
+            onPressed: () => {extOverlayer = null, _c.complete(1)},
+            child: Text(rightbtstr)));
+      }
     }
 
     extOverlayer = Container(
