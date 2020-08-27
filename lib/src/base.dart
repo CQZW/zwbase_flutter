@@ -32,6 +32,9 @@ abstract class ViewCtr {
 
   ///控制器更新数据,就是setstate
   void updateUI() {
+    if (!kReleaseMode && _state == null) {
+      vclog("maybe update when state is null");
+    }
     _state?.setState(() {});
   }
 
@@ -256,8 +259,11 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
     extOverlayer = ZWHud(showType: 0, showMsg: msg);
   }
 
+  VoidCallback _whenDismisscb;
+
   ///显示HUD错误信息
-  void hudShowErrMsg(String msg) {
+  void hudShowErrMsg(String msg, {VoidCallback dismisscb}) {
+    _whenDismisscb = dismisscb;
     extOverlayer = ZWHud(
       showType: 2,
       showMsg: msg,
@@ -266,7 +272,8 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   }
 
   ///显示HUD 成功新
-  void hudShowSuccessMsg(String msg) {
+  void hudShowSuccessMsg(String msg, {VoidCallback dismisscb}) {
+    _whenDismisscb = dismisscb;
     extOverlayer = ZWHud(
       showType: 1,
       showMsg: msg,
@@ -274,7 +281,8 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
     _autoDismissHUD(msg.length > 11 ? 3000 : 1500);
   }
 
-  void hudShowInfoMsg(String msg) {
+  void hudShowInfoMsg(String msg, {VoidCallback dismisscb}) {
+    _whenDismisscb = dismisscb;
     extOverlayer = ZWHud(
       showType: 3,
       showMsg: msg,
@@ -289,6 +297,7 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   ///消失HUD
   void hudDismiss() {
     extOverlayer = null;
+    _whenDismisscb?.call();
   }
 
   ///页面名字,用于统计
@@ -343,6 +352,9 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   void popBack() {
     if (Navigator.of(this._context).canPop()) {
       Navigator.pop(_context, mRetVal);
+
+      ///返回之后,直接将 _state 置空,防止继续更新
+      _state = null;
       return;
     }
     log("can not pop ,now is root");
