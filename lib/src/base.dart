@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:zwbase_flutter/zwbase_flutter.dart';
 
 import 'zwhud.dart';
 import 'zwrefreshlistvc.dart';
@@ -59,7 +60,7 @@ abstract class ViewCtr {
     vclog("onPreBuild");
   }
 
-  ///创建组件完成,中途变化的子组件变化,不会被执行,
+  ///根部组件变化之后会被执行,比如,第一次,子组件变化不会执行
   @mustCallSuper
   void onDidBuild() {
     vclog("onDidBuild");
@@ -351,7 +352,7 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   }
 
   ///页面的返回值
-  var mRetVal;
+  dynamic mRetVal;
   void popBack() {
     if (Navigator.of(this._context).canPop()) {
       Navigator.pop(_context, mRetVal);
@@ -366,7 +367,7 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   }
 
   ///PUSH到指定VC,并且有返回异步返回值
-  Future pushToVC(BaseVC to) {
+  Future<dynamic> pushToVC(BaseVC to) {
     to._bHasNavView = this._bHasNavView || _bIsNavRootVC;
     to._bIsPresent = this._bIsPresent;
     return Navigator.of(this._context).push(MaterialPageRoute(
@@ -397,10 +398,10 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   bool _bIsPresent = false;
 
   ///�������态弹出VC,
-  void presentVC(BaseVC to) {
+  Future<dynamic> presentVC(BaseVC to) {
     to._bIsPresent = true;
     to._bHasNavView = this._bHasNavView || _bIsNavRootVC;
-    Navigator.of(this._context).push(MaterialPageRoute(
+    return Navigator.of(this._context).push(MaterialPageRoute(
         fullscreenDialog: true,
         maintainState: true,
         builder: (context) {
@@ -559,22 +560,69 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
 
   //列表相关
   List mDataArr = [];
-
+  //当前页码
   int mPage = 0;
 
+  ///当前列表视图控制器,这3个变量作用就是快捷简化处理列表问题
+  ///mItListVC记得将mItListVC赋值,如果不是base创建的
+  ZWRefreshListVC mItListVC;
+
+  ///创建带下拉列表,刷新列表控制器,创建了,通过 mItListVC获取
+  void createListOrGirdVC(bool blist) {
+    assert(mItListVC == null, "you areadly have mItListVC ...");
+    mItListVC = ZWRefreshListVC(this, islistview: blist);
+  }
+
+  ///下面所有方法都是列表,刷新相关的,回调处理,基本上和IOS的原理差不多了
   int onListViewGetCount(int listid) => this.mDataArr.length;
 
   Widget onListViewGetItemView(int listid, int index) => null;
 
+  ///获取列表每行高度,和IOS heightForRowAtIndexPath一样,gridview不会执行
   double onListViewGetItemHeight(int listid) => null;
 
   void onListViewItemClicked(int listid, int index) {}
 
-  Future<Object> onHeaderStartRefresh(int listid) => null;
-
-  Future<Object> onFooterStartRefresh(int listid) => null;
-
+  ///获取gridview配置,和IOS UICollectionViewFlowLayout 那套意思差不多
   ZWGridInfo onGridViewGetConfig(int gridid) => ZWGridInfo.noramlInfo();
+
+  ///作为base,这里添加一个刷新快捷处理,在普通列表情况下
+  ///让子类只需要几个简单的回调就行了
+  Future<Object> onHeaderStartRefresh(int listid) async {
+    SResBase resb = await onLoadHeaderData(listid);
+    mDataArr.clear();
+    if (resb.mSuccess) {
+      hudDismiss();
+      mDataArr.addAll(resb.mData);
+    } else {
+      hudShowErrMsg(resb.mMsg);
+    }
+    mItListVC.updateListVC();
+    return true;
+  }
+
+  Future<Object> onFooterStartRefresh(int listid) async {
+    SResBase resb = await onLoadFooterData(listid);
+    if (resb.mSuccess) {
+      hudDismiss();
+      mDataArr.addAll(resb.mData);
+    } else {
+      hudShowErrMsg(resb.mMsg);
+    }
+    mItListVC.updateListVC();
+    return true;
+  }
+
+  ///通常一个最简单列表实现2个方法 ,onLoadHeaderData,onListViewGetItemView 这个就类似IOS的cellForRowAtIndexPath
+  ///
+  ///如果不重写上面的方法,就重新这2个方法,快捷的简单的加载数据
+  Future<SResBase> onLoadHeaderData(int listid) {
+    assert(false, "immp this func ...");
+  }
+
+  Future<SResBase> onLoadFooterData(int listid) {
+    assert(false, "immp this func ...");
+  }
 }
 
 class BaseElement extends StatefulElement {
@@ -594,7 +642,10 @@ class BaseElement extends StatefulElement {
     });
 
     if (_old != _new) {
-      (widget as BaseView).vc.onDidBuild();
+      ///延迟35毫秒,30帧率,基本上可以保证已经渲染完了,可以直接在onDidBuild里面做些操作了
+      Future.delayed(Duration(milliseconds: 35), () {
+        (widget as BaseView).vc.onDidBuild();
+      });
     }
   }
 }

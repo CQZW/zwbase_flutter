@@ -99,20 +99,35 @@ class ZWRefreshListVC extends ViewCtr implements ZWListVCDelegate {
     this.updateUI();
   }
 
+  ///刷新列表控
   void updateListVC() {
     this._getTagView().updateUI();
   }
 
+  ///主动开始头部刷新
+  void startHeaderFresh() {
+    _refreshView.isManualRefreshing = true;
+
+    ///效果好像差不多
+    _getTagView().mScrollCtr.jumpTo(-_refreshView.header.getExpSpace() - 20);
+    //_getTagView().mScrollCtr.animateTo(-_refreshView.header.getExpSpace() - 20,
+    //  duration: Duration(milliseconds: 200), curve: Curves.decelerate);
+  }
+
+  ZWRefreshView _refreshView;
   @override
   Widget realBuildWidget(BuildContext context) {
-    return ZWRefreshView(
+    _refreshView = ZWRefreshView(
         callback: (bheader, bstart) => onRefreshCallBack(bheader, bstart),
         header: mHasHeader ? ZWBaseHeader() : null,
         footer: mHasFooter ? ZWBaseFooter() : null,
         list: _getTagView().getView());
+    return _refreshView;
   }
 
   Future<Object> onRefreshCallBack(bool bheader, bstart) {
+    ///主动刷新已经完成了
+    _refreshView.isManualRefreshing = false;
     if (bstart) {
       if (bheader) return onHeaderStartRefresh(mListId);
       return onFooterStartRefresh(mListId);
@@ -159,9 +174,11 @@ class ZWListVC extends ViewCtr {
   final ZWListVCDelegate delegate;
   bool scrollbar;
 
+  ScrollController mScrollCtr = ScrollController();
   @override
   Widget realBuildWidget(Object context) {
     Widget list = ListView.builder(
+        controller: mScrollCtr,
         physics: AlwaysScrollableScrollPhysics(),
         itemCount: delegate.onListViewGetCount(listid),
         itemExtent: delegate.onListViewGetItemHeight(listid),
@@ -182,6 +199,7 @@ class ZWGridVC extends ZWListVC {
   Widget realBuildWidget(Object context) {
     ZWGridInfo info = delegate.onGridViewGetConfig(this.listid);
     Widget grid = GridView.builder(
+        controller: mScrollCtr,
         physics: AlwaysScrollableScrollPhysics(),
         itemCount: delegate.onListViewGetCount(listid),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

@@ -59,8 +59,8 @@ class HomeVC extends BaseVC {
     return Column(
       children: <Widget>[
         this.banner.getView(),
-        //Expanded(flex: 1, child: this.listvc.getView())
-        FlatButton(
+        Expanded(flex: 1, child: this.listvc.getView())
+        /*FlatButton(
           onPressed: () => {},
           child: Text("FlatButton"),
         ),
@@ -77,7 +77,7 @@ class HomeVC extends BaseVC {
           child: Text("F"),
         ),
         Text("Text"),
-        TextField(decoration: InputDecoration(hintText: "holder"))
+        TextField(decoration: InputDecoration(hintText: "holder"))*/
       ],
     );
   }
@@ -142,6 +142,10 @@ class HomeVC extends BaseVC {
     //     "{\"status\":false,\"data\":\"\",\"msg\":\"\u8bf7\u586b\u5199sid\",\"loginStatus\":0}";
     // Map<String, dynamic> aaa = json.decode(ss);
     // SResBase.baseWithData(aaa);
+/*
+    Future.delayed(Duration(seconds: 1), () {
+      listvc.startHeaderFresh();
+    });*/
   }
 
   void clicked_push() {
@@ -163,6 +167,7 @@ class HomeVC extends BaseVC {
   void onDidBuild() {
     super.onDidBuild();
     mMediaQueryData = MediaQuery.of(this.getContext());
+    listvc.startHeaderFresh();
   }
 }
 

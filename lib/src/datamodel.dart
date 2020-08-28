@@ -1,11 +1,11 @@
-class SResBase {
+class SResBase<T> {
   bool get mSuccess => mCode == 0;
   int mCode;
   String mMsg;
 
-  ///这里应该使用泛型之类的,,但是不喜欢到处是尖括号
-  ///使用as转换下
-  Object mData;
+  ///这里应该使用泛型之类的,,但是不喜欢到处是尖括号,,
+  ///dart居然可以不设置 T,,,那就没有到处尖括号了,good...
+  T mData;
 
   SResBase.infoWithOKString(String okstr) {
     mCode = 0;
@@ -28,5 +28,9 @@ class SResBase {
     else
       mCode = 1;
     mData = data["data"];
+  }
+  SResBase.baseWithSResb(SResBase resb) {
+    mCode = resb.mCode;
+    mMsg = resb.mMsg;
   }
 }

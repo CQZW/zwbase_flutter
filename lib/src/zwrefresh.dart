@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
@@ -33,6 +35,9 @@ class ZWRefreshView extends StatefulWidget {
 
   ///刷新回调
   final ZWRefeshCallback callback;
+
+  ///是不是外面在手动强制下拉刷新
+  bool isManualRefreshing = false;
   ZWRefreshView(
       {Key key, this.list, this.header, this.footer, @required this.callback})
       : super(key: key) {
@@ -101,25 +106,7 @@ class ZWRefreshState extends State<ZWRefreshView>
       onNotification: onScrollNotif,
     );
     _list = Listener(
-        child: _list,
-        onPointerUp: (PointerUpEvent e) {
-          if (widget.header != null && widget.header.touchup(_headerDragDiff)) {
-            //log("start header");
-            nowrefreshing = widget.header;
-            _headerDragDiff = 0;
-            widget
-                .callback(true, true)
-                .then((value) => onRefreshOk(value, true));
-          }
-          if (widget.footer != null && widget.footer.touchup(_footerDragDiff)) {
-            //log("start footer");
-            nowrefreshing = widget.footer;
-            _footerDragDiff = 0;
-            widget
-                .callback(false, true)
-                .then((value) => onRefreshOk(value, false));
-          }
-        });
+        child: _list, onPointerUp: (PointerUpEvent e) => _onPointerUp(e));
 
     List<Widget> cs = [];
 
@@ -142,6 +129,21 @@ class ZWRefreshState extends State<ZWRefreshView>
     cs.add(_list);
     return Stack(
         children: cs, fit: StackFit.expand, alignment: Alignment.topCenter);
+  }
+
+  void _onPointerUp(PointerUpEvent e) {
+    if (widget.header != null && widget.header.touchup(_headerDragDiff)) {
+      //log("start header");
+      nowrefreshing = widget.header;
+      _headerDragDiff = 0;
+      widget.callback(true, true).then((value) => onRefreshOk(value, true));
+    }
+    if (widget.footer != null && widget.footer.touchup(_footerDragDiff)) {
+      //log("start footer");
+      nowrefreshing = widget.footer;
+      _footerDragDiff = 0;
+      widget.callback(false, true).then((value) => onRefreshOk(value, false));
+    }
   }
 
   double getListTopAt() {
@@ -242,30 +244,45 @@ class ZWRefreshState extends State<ZWRefreshView>
 
     if (widget.header != null) {
       if (notification.metrics.pixels <= notification.metrics.minScrollExtent) {
-        _headerDragDiff = notification.metrics.pixels.abs();
-        widget.header.draging(_headerDragDiff);
-        if (widget.header.getRefreshStatus() == RefreshStatus.status_done &&
-            anctr.isAnimating) {
-          ///顶部刷新,暂时没有发现底部那个问题..但是先处理
-        } else
-          setState(() {});
+        _onDragingHeader(notification.metrics.pixels.abs());
       }
     }
     if (widget.footer != null) {
       if (notification.metrics.pixels >= notification.metrics.maxScrollExtent) {
-        _footerDragDiff =
-            notification.metrics.pixels - notification.metrics.maxScrollExtent;
-
-        widget.footer.draging(_footerDragDiff);
-        if (widget.footer.getRefreshStatus() == RefreshStatus.status_done &&
-            anctr.isAnimating) {
-          ///当底部刷新完成的时候,移动listview的时候,依然会有滚动事件,
-          ///这时候如果调用 setState 会有错误
-        } else
-          setState(() {});
+        _onDragingFooter(
+            notification.metrics.pixels - notification.metrics.maxScrollExtent);
       }
     }
     return false;
+  }
+
+  void _onDragingHeader(double dragoffset) {
+    _headerDragDiff = dragoffset;
+    widget.header.draging(_headerDragDiff);
+    if (widget.header.getRefreshStatus() == RefreshStatus.status_done &&
+        anctr.isAnimating) {
+      ///顶部刷新,暂时没有发现底部那个问题..但是先处理
+    } else {
+      setState(() {});
+    }
+    if (widget.isManualRefreshing && dragoffset > widget.header.getExpSpace()) {
+      _onPointerUp(null);
+    }
+  }
+
+  void _onDragingFooter(double dragoffset) {
+    _footerDragDiff = dragoffset;
+    widget.footer.draging(_footerDragDiff);
+    if (widget.footer.getRefreshStatus() == RefreshStatus.status_done &&
+        anctr.isAnimating) {
+      ///当底部刷新完成的时候,移动listview的时候,依然会有滚动事件,
+      ///这时候如果调用 setState 会有错误
+    } else {
+      setState(() {});
+    }
+    if (widget.isManualRefreshing && dragoffset > widget.footer.getExpSpace()) {
+      _onPointerUp(null);
+    }
   }
 
   double _headerDragDiff = 0;
