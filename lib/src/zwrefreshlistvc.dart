@@ -109,9 +109,9 @@ class ZWRefreshListVC extends ViewCtr implements ZWListVCDelegate {
     _refreshView.isManualRefreshing = true;
 
     ///效果好像差不多
-    _getTagView().mScrollCtr.jumpTo(-_refreshView.header.getExpSpace() - 20);
-    //_getTagView().mScrollCtr.animateTo(-_refreshView.header.getExpSpace() - 20,
-    //  duration: Duration(milliseconds: 200), curve: Curves.decelerate);
+    //_getTagView().mScrollCtr.jumpTo(-_refreshView.header.getExpSpace() - 20);
+    _getTagView().mScrollCtr.animateTo(-_refreshView.header.getExpSpace() - 20,
+        duration: Duration(milliseconds: 200), curve: Curves.decelerate);
   }
 
   ZWRefreshView _refreshView;

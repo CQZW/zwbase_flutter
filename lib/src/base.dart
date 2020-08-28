@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:logger/logger.dart';
 import 'package:zwbase_flutter/zwbase_flutter.dart';
 
 import 'zwhud.dart';
@@ -93,9 +94,15 @@ abstract class ViewCtr {
 
 ///基础控制器
 abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
+  var _logger = Logger(
+      printer: PrettyPrinter(
+    methodCount: 1,
+    printTime: true,
+  ));
+
   @override
   vclog(String msg) {
-    log(msg, name: mPageName ?? '');
+    _logger.d(msg);
   }
 
   BuildContext getContext() => _context;
@@ -591,6 +598,8 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   ///让子类只需要几个简单的回调就行了
   Future<Object> onHeaderStartRefresh(int listid) async {
     SResBase resb = await onLoadHeaderData(listid);
+    vclog("load complteted");
+
     mDataArr.clear();
     if (resb.mSuccess) {
       hudDismiss();
