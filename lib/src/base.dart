@@ -299,7 +299,8 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   }
 
   ///消失HUD
-  void hudDismiss() {
+  void hudDismiss({VoidCallback dismisscb}) {
+    _whenDismisscb = dismisscb;
     extOverlayer = null;
     _whenDismisscb?.call();
   }
