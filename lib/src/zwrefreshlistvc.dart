@@ -44,6 +44,8 @@ abstract class ZWListVCDelegate {
   Future<Object> onFooterStartRefresh(int listid);
 
   ZWGridInfo onGridViewGetConfig(int gridid);
+
+  Widget onGetEmptyView(int list);
 }
 
 class ZWRefreshListVC extends ViewCtr implements ZWListVCDelegate {
@@ -159,6 +161,10 @@ class ZWRefreshListVC extends ViewCtr implements ZWListVCDelegate {
   }
 
   ZWGridInfo onGridViewGetConfig(int gridid) => null;
+
+  Widget onGetEmptyView(int list) {
+    return mDelegate.onGetEmptyView(list);
+  }
 }
 
 class ZWListVC extends ViewCtr {
@@ -183,8 +189,18 @@ class ZWListVC extends ViewCtr {
           return delegate.onListViewGetItemView(listid, index);
         });
     if (scrollbar) list = Scrollbar(child: list);
-    //_listmap[listid] = list;
-    return list;
+    return wapperEmptyView(list);
+  }
+
+  Widget wapperEmptyView(Widget c) {
+    Widget e = delegate.onGetEmptyView(listid);
+    var l = [c];
+    if (e != null && delegate.onListViewGetCount(listid) == 0) l.add(e);
+    return Stack(
+      children: l,
+      fit: StackFit.expand,
+      alignment: Alignment.center,
+    );
   }
 }
 
@@ -208,6 +224,6 @@ class ZWGridVC extends ZWListVC {
           return delegate.onListViewGetItemView(this.listid, index);
         });
     if (scrollbar) grid = Scrollbar(child: grid);
-    return grid;
+    return wapperEmptyView(grid);
   }
 }

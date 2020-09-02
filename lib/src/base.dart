@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -199,22 +200,17 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
         appBar: makeTopBar(context),
         body: wapperForExt(makePageBody(context), context),
         bottomNavigationBar: tabbar_Widget);
-    if (extOverlayer != null) {
-      //如果有扩展覆盖层,那么就用stack堆积起来
-      t = Stack(
-        children: <Widget>[t, extOverlayer],
-        fit: StackFit.expand,
-        alignment: Alignment.center,
-      );
-    } else {
-      t = Stack(
-        children: <Widget>[
-          t,
-        ],
-        fit: StackFit.expand,
-        alignment: Alignment.center,
-      );
-    }
+    var l = [t];
+
+    ///如果有扩展覆盖层,那么就用stack堆积起来
+    if (extOverlayer != null) l.add(extOverlayer);
+
+    t = Stack(
+      children: l,
+      fit: StackFit.expand,
+      alignment: Alignment.center,
+    );
+
     return MaterialApp(
         title: BaseVC.mappname, home: t, theme: getThemeData(context));
   }
@@ -483,7 +479,8 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
     TextField _t = TextField(
         controller: _input_ctr,
         autofocus: true,
-        decoration: InputDecoration(hintText: holder));
+        decoration:
+            InputDecoration(hintText: holder, border: InputBorder.none));
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       acts.add(CupertinoDialogAction(
           isDestructiveAction: true,
@@ -628,6 +625,21 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
     }
     mItListVC.updateListVC();
     return true;
+  }
+
+  Widget onGetEmptyView(int list) {
+    return Center(
+      child: Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search,
+              size: 26,
+            ),
+            Text("暂无数据...")
+          ]),
+    );
   }
 
   ///通常一个最简单列表实现2个方法 ,onLoadHeaderData,onListViewGetItemView 这个就类似IOS的cellForRowAtIndexPath

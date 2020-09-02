@@ -86,6 +86,7 @@ class HomeVC extends BaseVC {
     );
   }
 
+  ///一个具备下拉刷新的列表,只需要实现下面3个方法即可
   @override
   Widget onListViewGetItemView(int listid, int index) {
     return Center(child: Text("cell at : $index"));
@@ -97,32 +98,28 @@ class HomeVC extends BaseVC {
   }
 
   Future<SResBase> onLoadHeaderData(int listid) {
-    vclog("on loaddata");
     return Future.delayed(Duration(seconds: 2), () {
       var list = [];
       list.add("aa");
       list.add("bb");
-      //listvc.updateListVC();
       SResBase ret = SResBase.infoWithOKString("okstr");
-      ret.mData = list;
-      vclog("data load ok");
+      ret.mData = [];
       return ret;
       //return Future.value(2);
     });
   }
-/*
-  @override
-  Future<Object> onHeaderStartRefresh(int listid) {
-    return Future.delayed(Duration(seconds: 2), () {
-      this.mDataArr.clear();
-      this.mDataArr.add("aa");
-      this.mDataArr.add("aa");
 
-      //listvc.updateListVC();
-      return 2;
+  Future<SResBase> onLoadFooterData(int listid) {
+    return Future.delayed(Duration(seconds: 2), () {
+      var list = [];
+      list.add("fff");
+      list.add("fff");
+      SResBase ret = SResBase.infoWithOKString("okstr");
+      ret.mData = list;
+      return ret;
       //return Future.value(2);
     });
-  }*/
+  }
 
   void clicked_bt() {
     _testv++;
