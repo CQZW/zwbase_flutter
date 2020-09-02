@@ -207,6 +207,14 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
         fit: StackFit.expand,
         alignment: Alignment.center,
       );
+    } else {
+      t = Stack(
+        children: <Widget>[
+          t,
+        ],
+        fit: StackFit.expand,
+        alignment: Alignment.center,
+      );
     }
     return MaterialApp(
         title: BaseVC.mappname, home: t, theme: getThemeData(context));

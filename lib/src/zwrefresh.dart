@@ -30,28 +30,42 @@ typedef ZWRefeshCallback = Future<Object> Function(bool bheader, bool bstart);
 class ZWRefreshView extends StatefulWidget {
   ///对应的列表视图
   final Widget list;
-  final ZWBaseHeaderImmp header;
-  final ZWBaseHeaderImmp footer;
 
   ///刷新回调
   final ZWRefeshCallback callback;
 
+  final bool hasHeader;
+  final bool hasFooter;
+
   ///是不是外面在手动强制下拉刷新
   bool isManualRefreshing = false;
+
   ZWRefreshView(
-      {Key key, this.list, this.header, this.footer, @required this.callback})
-      : super(key: key) {
-    assert(this.header != null || this.footer != null,
-        "header or footer must has one.");
-  }
+      {Key key,
+      this.hasHeader = true,
+      this.hasFooter = false,
+      this.list,
+      @required this.callback})
+      : super(key: key);
+
   //带有普通的下拉刷新和上拉加载..
-  ZWRefreshView.withBaseHeader({Key key, this.list, this.callback})
-      : this.header = ZWBaseHeader(),
-        this.footer = ZWBaseFooter(),
-        super(key: key);
+  ZWRefreshView.withBaseHeader(
+      {Key key,
+      this.hasHeader = true,
+      this.hasFooter = true,
+      this.list,
+      @required this.callback})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => ZWRefreshState();
+
+  ZWBaseHeaderImmp createHeader() => ZWBaseHeader();
+  ZWBaseHeaderImmp createFooter() => ZWBaseFooter();
+
+  ///当主动刷新的时候,模拟下拉的距离,
+  ///,大于 ZWBaseHeaderImmp 的 getExpSpace 就行了
+  double getHeaderManualExp() => -70;
 }
 
 class ZWRefreshState extends State<ZWRefreshView>
@@ -59,15 +73,21 @@ class ZWRefreshState extends State<ZWRefreshView>
   AnimationController anctr;
 
   ZWBaseHeaderImmp nowrefreshing;
+
+  ZWBaseHeaderImmp header;
+  ZWBaseHeaderImmp footer;
+
   @override
   void initState() {
     super.initState();
+    this.header = widget.hasHeader ? widget.createHeader() : null;
+    this.footer = widget.hasFooter ? widget.createFooter() : null;
 
     anctr = AnimationController(
         duration: const Duration(milliseconds: 200), vsync: this);
     anctr.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        //log("AnimationStatus.completed");
+        log("AnimationStatus.completed");
         nowrefreshing.refreshCompleted();
         nowrefreshing = null;
         anctr.reset();
@@ -77,9 +97,9 @@ class ZWRefreshState extends State<ZWRefreshView>
 
   @override
   void dispose() {
-    // TODO: implement dispose
     anctr.dispose();
     super.dispose();
+    //log("refresh dispose");
   }
 
   @override
@@ -92,9 +112,7 @@ class ZWRefreshState extends State<ZWRefreshView>
       return AnimatedBuilder(
           child: widget.list,
           animation: anctr,
-          builder: (context, child) {
-            return _build(context, child);
-          });
+          builder: (context, child) => _build(context, child));
     } else {
       return _build(context, null);
     }
@@ -110,14 +128,14 @@ class ZWRefreshState extends State<ZWRefreshView>
 
     List<Widget> cs = [];
 
-    if (widget.header != null &&
-        widget.header.getRefreshStatus() != RefreshStatus.status_normal) {
+    if (header != null &&
+        header.getRefreshStatus() != RefreshStatus.status_normal) {
       //如果有header,并且已经不是普通状态,就需要显示了
       //log("header....");
       cs.add(getHeaderFooter(context, true));
     }
-    if (widget.footer != null &&
-        widget.footer.getRefreshStatus() != RefreshStatus.status_normal) {
+    if (footer != null &&
+        footer.getRefreshStatus() != RefreshStatus.status_normal) {
       //log("footer....");
       cs.add(getHeaderFooter(context, false));
     }
@@ -132,48 +150,48 @@ class ZWRefreshState extends State<ZWRefreshView>
   }
 
   void _onPointerUp(PointerUpEvent e) {
-    if (widget.header != null && widget.header.touchup(_headerDragDiff)) {
+    if (header != null && header.touchup(_headerDragDiff)) {
       //log("start header");
-      nowrefreshing = widget.header;
+      nowrefreshing = header;
       _headerDragDiff = 0;
       widget.callback(true, true).then((value) => onRefreshOk(value, true));
     }
-    if (widget.footer != null && widget.footer.touchup(_footerDragDiff)) {
+    if (footer != null && footer.touchup(_footerDragDiff)) {
       //log("start footer");
-      nowrefreshing = widget.footer;
+      nowrefreshing = footer;
       _footerDragDiff = 0;
       widget.callback(false, true).then((value) => onRefreshOk(value, false));
     }
   }
 
   double getListTopAt() {
-    if (widget.header == null) return 0;
-    RefreshStatus ss = widget.header.getRefreshStatus();
+    if (header == null) return 0;
+    RefreshStatus ss = header.getRefreshStatus();
     //这种情况就需要 listview 停留在header之下
     if (ss == RefreshStatus.status_refreshing)
-      return widget.header.getHeight() + widget.header.showatRefreshing();
+      return header.getHeight() + header.showatRefreshing();
     //如果是完成了,那么开始做动画了,
     if (ss == RefreshStatus.status_done) {
       if (anctr.isAnimating)
-        return (anctr.upperBound - anctr.value) * widget.header.getHeight();
+        return (anctr.upperBound - anctr.value) * header.getHeight();
       else //如果还没开始动画,还处理停留状态,先继续停留
-        return widget.header.getHeight() + widget.header.showatRefreshing();
+        return header.getHeight() + header.showatRefreshing();
     }
     return 0;
   }
 
   double getListBottomAt() {
-    if (widget.footer == null) return 0;
-    RefreshStatus ss = widget.footer.getRefreshStatus();
+    if (footer == null) return 0;
+    RefreshStatus ss = footer.getRefreshStatus();
     //这种情况就需要 listview 停留在header之下
     if (ss == RefreshStatus.status_refreshing)
-      return widget.footer.getHeight() + widget.footer.showatRefreshing();
+      return footer.getHeight() + footer.showatRefreshing();
     //如果是完成了,那么开始做动画了,
     if (ss == RefreshStatus.status_done) {
       if (anctr.isAnimating)
-        return (anctr.upperBound - anctr.value) * widget.footer.getHeight();
+        return (anctr.upperBound - anctr.value) * footer.getHeight();
       else
-        return widget.footer.getHeight() + widget.footer.showatRefreshing();
+        return footer.getHeight() + footer.showatRefreshing();
     }
     return 0;
   }
@@ -181,37 +199,37 @@ class ZWRefreshState extends State<ZWRefreshView>
   Widget getHeaderFooter(BuildContext context, bool bheader) {
     if (bheader) {
       double _v = null;
-      if (widget.header.getRefreshStatus() == RefreshStatus.status_done) {
+      if (header.getRefreshStatus() == RefreshStatus.status_done) {
         if (anctr.isAnimating || anctr.isCompleted)
-          _v = anctr.value * widget.header.getHeight() * -1;
+          _v = anctr.value * header.getHeight() * -1;
         else //处理刷新完成之后的悬停.....
-          _v = widget.header.showatRefreshing();
+          _v = header.showatRefreshing();
       }
       return Positioned(
-          child: widget.header.getWidget(context),
-          top: _v == null ? widget.header.showat(_headerDragDiff) : _v,
-          height: widget.header.getHeight());
+          child: header.getWidget(context),
+          top: _v == null ? header.showat(_headerDragDiff) : _v,
+          height: header.getHeight());
     } else {
       double _v = null;
-      if (widget.footer.getRefreshStatus() == RefreshStatus.status_done) {
+      if (footer.getRefreshStatus() == RefreshStatus.status_done) {
         if (anctr.isAnimating || anctr.isCompleted)
-          _v = anctr.value * widget.footer.getHeight() * -1;
+          _v = anctr.value * footer.getHeight() * -1;
         else {
-          _v = widget.footer.showatRefreshing();
+          _v = footer.showatRefreshing();
         }
       }
       return Positioned(
-          child: widget.footer.getWidget(context),
-          bottom: _v == null ? widget.footer.showat(_footerDragDiff) : _v,
-          height: widget.footer.getHeight());
+          child: footer.getWidget(context),
+          bottom: _v == null ? footer.showat(_footerDragDiff) : _v,
+          height: footer.getHeight());
     }
   }
 
   void onRefreshOk(Object value, bool bheader) {
     if (bheader)
-      widget.header.refreshDone(value);
+      header.refreshDone(value);
     else
-      widget.footer.refreshDone(value);
+      footer.refreshDone(value);
 
     widget.callback(bheader, false);
 
@@ -242,12 +260,12 @@ class ZWRefreshState extends State<ZWRefreshView>
         " dic:" +
         notification.metrics.axisDirection.toString());*/
 
-    if (widget.header != null) {
+    if (header != null) {
       if (notification.metrics.pixels <= notification.metrics.minScrollExtent) {
         _onDragingHeader(notification.metrics.pixels.abs());
       }
     }
-    if (widget.footer != null) {
+    if (footer != null) {
       if (notification.metrics.pixels >= notification.metrics.maxScrollExtent) {
         _onDragingFooter(
             notification.metrics.pixels - notification.metrics.maxScrollExtent);
@@ -258,29 +276,29 @@ class ZWRefreshState extends State<ZWRefreshView>
 
   void _onDragingHeader(double dragoffset) {
     _headerDragDiff = dragoffset;
-    widget.header.draging(_headerDragDiff);
-    if (widget.header.getRefreshStatus() == RefreshStatus.status_done &&
+    header.draging(_headerDragDiff);
+    if (header.getRefreshStatus() == RefreshStatus.status_done &&
         anctr.isAnimating) {
       ///顶部刷新,暂时没有发现底部那个问题..但是先处理
     } else {
       setState(() {});
     }
-    if (widget.isManualRefreshing && dragoffset > widget.header.getExpSpace()) {
+    if (widget.isManualRefreshing && dragoffset > header.getExpSpace()) {
       _onPointerUp(null);
     }
   }
 
   void _onDragingFooter(double dragoffset) {
     _footerDragDiff = dragoffset;
-    widget.footer.draging(_footerDragDiff);
-    if (widget.footer.getRefreshStatus() == RefreshStatus.status_done &&
+    footer.draging(_footerDragDiff);
+    if (footer.getRefreshStatus() == RefreshStatus.status_done &&
         anctr.isAnimating) {
       ///当底部刷新完成的时候,移动listview的时候,依然会有滚动事件,
       ///这时候如果调用 setState 会有错误
     } else {
       setState(() {});
     }
-    if (widget.isManualRefreshing && dragoffset > widget.footer.getExpSpace()) {
+    if (widget.isManualRefreshing && dragoffset > footer.getExpSpace()) {
       _onPointerUp(null);
     }
   }
@@ -345,6 +363,7 @@ abstract class ZWBaseHeaderImmp {
 
 class ZWBaseHeader implements ZWBaseHeaderImmp {
   RefreshStatus getRefreshStatus() {
+    //log("it statues:" + _refreshstatus.toString());
     return _refreshstatus;
   }
 

@@ -26,12 +26,11 @@ void main() {
 
 class HomeVC extends BaseVC {
   HomeVC() : super() {
-    this.listvc = ZWRefreshListVC(this, id: 0, islistview: false);
-    this.listvc.mHasFooter = true;
     // int x = 0;
     // do {
     //   this.mDataArr.add("aa");
     // } while (x-- > 0);
+    createListOrGirdVC(true);
 
     this.banner = ZWBanner();
     this.banner.onItemClicked = (index, item) {
@@ -51,7 +50,6 @@ class HomeVC extends BaseVC {
   }
 
   int _testv = 1;
-  ZWRefreshListVC listvc;
 
   ZWBanner banner;
 
@@ -59,7 +57,13 @@ class HomeVC extends BaseVC {
     return Column(
       children: <Widget>[
         this.banner.getView(),
-        Expanded(flex: 1, child: this.listvc.getView())
+        FloatingActionButton(
+            onPressed: () {
+              hudShowLoading("加载中...");
+              mItListVC.startHeaderFresh();
+            },
+            child: Text("do")),
+        Expanded(flex: 1, child: mItListVC.getView())
         /*FlatButton(
           onPressed: () => {},
           child: Text("FlatButton"),
@@ -92,6 +96,21 @@ class HomeVC extends BaseVC {
     return 50;
   }
 
+  Future<SResBase> onLoadHeaderData(int listid) {
+    vclog("on loaddata");
+    return Future.delayed(Duration(seconds: 2), () {
+      var list = [];
+      list.add("aa");
+      list.add("bb");
+      //listvc.updateListVC();
+      SResBase ret = SResBase.infoWithOKString("okstr");
+      ret.mData = list;
+      vclog("data load ok");
+      return ret;
+      //return Future.value(2);
+    });
+  }
+/*
   @override
   Future<Object> onHeaderStartRefresh(int listid) {
     return Future.delayed(Duration(seconds: 2), () {
@@ -100,18 +119,10 @@ class HomeVC extends BaseVC {
       this.mDataArr.add("aa");
 
       //listvc.updateListVC();
-      return Future.value(2);
-    });
-  }
-
-  @override
-  Future<Object> onFooterStartRefresh(int listid) {
-    return Future.delayed(Duration(seconds: 2), () {
-      this.mDataArr.add("bb");
-      this.mDataArr.add("bb");
       return 2;
+      //return Future.value(2);
     });
-  }
+  }*/
 
   void clicked_bt() {
     _testv++;
@@ -167,7 +178,6 @@ class HomeVC extends BaseVC {
   void onDidBuild() {
     super.onDidBuild();
     mMediaQueryData = MediaQuery.of(this.getContext());
-    listvc.startHeaderFresh();
   }
 }
 

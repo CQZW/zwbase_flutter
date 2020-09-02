@@ -108,19 +108,16 @@ class ZWRefreshListVC extends ViewCtr implements ZWListVCDelegate {
   void startHeaderFresh() {
     _refreshView.isManualRefreshing = true;
 
-    ///效果好像差不多
-    //_getTagView().mScrollCtr.jumpTo(-_refreshView.header.getExpSpace() - 20);
-    _getTagView().mScrollCtr.animateTo(-_refreshView.header.getExpSpace() - 20,
-        duration: Duration(milliseconds: 200), curve: Curves.decelerate);
+    _getTagView().mScrollCtr.jumpTo(_refreshView.getHeaderManualExp());
   }
 
   ZWRefreshView _refreshView;
   @override
   Widget realBuildWidget(BuildContext context) {
     _refreshView = ZWRefreshView(
+        hasHeader: true,
+        hasFooter: true,
         callback: (bheader, bstart) => onRefreshCallBack(bheader, bstart),
-        header: mHasHeader ? ZWBaseHeader() : null,
-        footer: mHasFooter ? ZWBaseFooter() : null,
         list: _getTagView().getView());
     return _refreshView;
   }
