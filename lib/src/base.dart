@@ -9,7 +9,6 @@ import 'package:zwbase_flutter/zwbase_flutter.dart';
 
 import 'zwhud.dart';
 import 'zwrefreshlistvc.dart';
-import 'package:meta/meta.dart';
 
 ///这里是参考之前IOS的基类,将常用的方法封装了
 abstract class ViewCtr {
