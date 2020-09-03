@@ -260,12 +260,32 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
     return body;
   }
 
+  ///扩展层的动画控制
+  AnimationController animationCtrForExt;
+
   ///用于扩展显示覆盖层,比如,HUD,
   Widget _extOverlayer;
   Widget get extOverlayer => _extOverlayer;
+
   set extOverlayer(Widget val) {
-    _extOverlayer = val;
-    updateUI();
+    if (animationCtrForExt == null) {
+      animationCtrForExt = AnimationController(
+          vsync: _state, duration: Duration(milliseconds: 250));
+    }
+    if (val != null) {
+      animationCtrForExt.reset();
+      _extOverlayer = FadeTransition(
+        opacity: animationCtrForExt,
+        child: val,
+      );
+      updateUI();
+      animationCtrForExt.forward();
+    } else {
+      animationCtrForExt.reverse().then((value) {
+        _extOverlayer = null;
+        updateUI();
+      });
+    }
   }
 
   ///显示HUD加载中
@@ -711,7 +731,8 @@ class BaseNavView extends StatelessWidget {
 }
 
 ///状态中间件....
-class BaseState extends State<BaseView> with AutomaticKeepAliveClientMixin {
+class BaseState extends State<BaseView>
+    with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
   @override
   bool get wantKeepAlive => widget.vc.wantKeepAlive;
 
