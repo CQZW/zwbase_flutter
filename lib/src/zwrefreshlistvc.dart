@@ -182,7 +182,7 @@ class ZWListVC extends ViewCtr {
   Widget realBuildWidget(Object context) {
     Widget list = ListView.builder(
         controller: mScrollCtr,
-        physics: AlwaysScrollableScrollPhysics(),
+        physics: BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
         itemCount: delegate.onListViewGetCount(listid),
         itemExtent: delegate.onListViewGetItemHeight(listid),
         itemBuilder: (BuildContext context, int index) {
@@ -213,7 +213,7 @@ class ZWGridVC extends ZWListVC {
     ZWGridInfo info = delegate.onGridViewGetConfig(this.listid);
     Widget grid = GridView.builder(
         controller: mScrollCtr,
-        physics: AlwaysScrollableScrollPhysics(),
+        physics: BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
         itemCount: delegate.onListViewGetCount(listid),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: info.columnCount,
