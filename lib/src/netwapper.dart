@@ -1,8 +1,20 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:ui';
 
 import 'package:dio/dio.dart';
+import 'package:package_info/package_info.dart';
 import 'datamodel.dart';
+/*
+网络请求封装
+
+请求就4个参数,token作为参数传递,没有用HTTP自带的认证方式
+req => { token,lang,version,data },
+
+返回就3个数据,
+resb => { code,data,msg}
+
+*/
 
 class NetWapper {
   static void setBaseURL(String url) {
@@ -36,30 +48,47 @@ class NetWapper {
     _dio = Dio(baseopt);
   }
 
-  String getToken() {
-    return null;
+  ///获取认证token
+  String getToken() => '';
+
+  ///获取设备语言设置
+  String getLang() => 'zh-CN';
+
+  ///请求之前做些额外处理,比如数据加密,添加公共字段
+  Future<Map> preDeal(String path, Map param) async {
+    Map r = Map();
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    r["version"] = packageInfo.version;
+    r["lang"] = getLang();
+    r['token'] = getToken();
+
+    ///如果需要加密,这里处理,只加密data字段
+    r["data"] = json.encode(param != null ? param : Map());
+    return r;
+  }
+
+  ///请求之后做些额外处理,比如数据解密,,
+  Future<Map<String, dynamic>> postDeal(String resbstr) async {
+    Map<String, dynamic> r = json.decode(resbstr);
+
+    ///如果要解密,只处理data字段即可
+    ///r['data'] = decryp( r['data'] );
+    return r;
   }
 
   Future<SResBase> postPath(String path, Map parameters) async {
     try {
       String url = makeApiPath(path);
-      Map<String, dynamic> header = Map();
-      String token = getToken();
-      Map reqparam;
-      if (parameters != null)
-        reqparam = Map.from(parameters);
-      else
-        reqparam = Map();
+      Map reqparam = await preDeal(path, parameters);
 
-      if (token != null) {
-        header["authorization"] = "Bearer " + token;
-      }
       log("req url:" + _g_baseurl + url + " param:" + reqparam.toString());
-      Response<String> resb = await _dio.post(url,
-          data: parameters, options: Options(headers: header));
+      Response<String> resb = await _dio.post(
+        url,
+        data: reqparam,
+      );
       if (resb != null) {
         log("resb url:" + url + " data:" + resb.data);
-        return SResBase.baseWithData(json.decode(resb.data));
+        return SResBase.baseWithData(await postDeal(resb.data));
       } else {
         return SResBase.infoWithErrorString("网络请求错误");
       }

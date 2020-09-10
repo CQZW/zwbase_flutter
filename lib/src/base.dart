@@ -870,3 +870,54 @@ class BaseTabBarVC extends BaseVC {
     throw UnimplementedError();
   }
 }
+
+///验证码按钮
+class ZWTickBt extends ViewCtr {
+  ZWTickBt(this.onClicked, {this.ticks = 60});
+  final VoidCallback onClicked;
+  final int ticks;
+  String bttext = "获取验证码";
+
+  void _onBtClicked() {
+    if (_timer != null && _timer.isActive) return;
+    this.onClicked();
+  }
+
+  Timer _timer;
+  int _timer_ticks;
+  void startTick() {
+    if (_timer == null) {
+      _timer_ticks = this.ticks;
+      _timer = Timer.periodic(Duration(seconds: 1), (Timer t) {
+        _timer_ticks--;
+        bttext = ticks.toString();
+        if (ticks == 0) {
+          stopTick();
+        } else
+          updateUI();
+      });
+      return;
+    }
+  }
+
+  void stopTick() {
+    _timer?.cancel();
+    _timer = null;
+    bttext = "获取验证码";
+    updateUI();
+  }
+
+  @override
+  Widget realBuildWidget(Object context) {
+    return FlatButton(
+      textColor: Colors.white,
+      onPressed: () => _onBtClicked(),
+      child: Text(
+        bttext,
+        style: TextStyle(fontSize: 12),
+      ),
+      color: Color.fromARGB(255, 249, 105, 77),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+    );
+  }
+}
