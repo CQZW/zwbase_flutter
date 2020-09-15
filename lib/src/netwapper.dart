@@ -3,13 +3,14 @@ import 'dart:developer';
 import 'dart:ui';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:package_info/package_info.dart';
 import 'datamodel.dart';
 /*
 网络请求封装
 
 请求就4个参数,token作为参数传递,没有用HTTP自带的认证方式
-req => { token,lang,version,data },
+req => { token,lang,version,client,data },
 
 返回就3个数据,
 resb => { code,data,msg}
@@ -61,6 +62,7 @@ class NetWapper {
     r["version"] = packageInfo.version;
     r["lang"] = getLang();
     r['token'] = getToken();
+    r['client'] = defaultTargetPlatform.toString();
 
     ///如果需要加密,这里处理,只加密data字段
     r["data"] = json.encode(param != null ? param : Map());
@@ -68,7 +70,7 @@ class NetWapper {
   }
 
   ///请求之后做些额外处理,比如数据解密,,
-  Future<Map<String, dynamic>> postDeal(String resbstr) async {
+  Future<Map<String, dynamic>> dealPost(String resbstr) async {
     Map<String, dynamic> r = json.decode(resbstr);
 
     ///如果要解密,只处理data字段即可
@@ -76,10 +78,10 @@ class NetWapper {
     return r;
   }
 
-  Future<SResBase> postPath(String path, Map parameters) async {
+  Future<SResBase> postPath(String path, Map param) async {
     try {
       String url = makeApiPath(path);
-      Map reqparam = await preDeal(path, parameters);
+      Map reqparam = await preDeal(path, param);
 
       log("req url:" + _g_baseurl + url + " param:" + reqparam.toString());
       Response<String> resb = await _dio.post(
@@ -88,7 +90,7 @@ class NetWapper {
       );
       if (resb != null) {
         log("resb url:" + url + " data:" + resb.data);
-        return SResBase.baseWithData(await postDeal(resb.data));
+        return SResBase.baseWithData(await dealPost(resb.data));
       } else {
         return SResBase.infoWithErrorString("网络请求错误");
       }

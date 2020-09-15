@@ -647,6 +647,7 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
     return true;
   }
 
+  ///当列表没有数据的时候,显示一个空的提示
   Widget onGetEmptyView(int list) {
     return Center(
       child: Row(

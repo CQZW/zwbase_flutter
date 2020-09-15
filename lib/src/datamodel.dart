@@ -36,6 +36,7 @@ class SResBase<T> {
   SResBase.baseWithSResb(SResBase resb) {
     mCode = resb.mCode;
     mMsg = resb.mMsg;
+    mData = resb.mData;
   }
 }
 
@@ -43,17 +44,19 @@ class SResBase<T> {
 typedef dynamic FetchFunc(Map<String, dynamic> json, dynamic instance);
 typedef dynamic FromJsonFunc(Map<String, dynamic> json);
 
+///如果配合 JsonSerializable 模块,我自己修改的版本使用
+///会判断类名是否以 ZW开头,如果是会多生成一个Fetch方法,否则和和原模块一样
 abstract class SAutoEx {
   SAutoEx({Map<String, dynamic> json, FetchFunc fetchfunc}) {
-    fetchIt(json, fetchfunc: fetchfunc);
+    ///如果有自定义的fetch方法,就用,否则就默认的
+    if (fetchfunc != null)
+      fetchfunc(json, this);
+    else
+      fetchIt(json);
   }
 
   ///填充类数据
-  void fetchIt(Map<String, dynamic> json, {FetchFunc fetchfunc}) {
-    if (json != null && fetchfunc != null) {
-      fetchfunc(json, this);
-    }
-  }
+  void fetchIt(Map<String, dynamic> json) {}
 
   ///将自己存储到本地
   Future<bool> dumpSelf(String key, Map<String, dynamic> jsonmap) async {
