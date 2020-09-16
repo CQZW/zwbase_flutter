@@ -20,7 +20,6 @@ abstract class ViewCtr {
   Widget vcBuildWidget(BuildContext context, BaseState state) {
     _context = context;
     _state = state;
-    if (!mIsDidBuildOnce) onPreBuild(context);
     return realBuildWidget(context);
   }
 
@@ -55,9 +54,9 @@ abstract class ViewCtr {
   ///是否完成了至少一次build
   bool mIsDidBuildOnce = false;
 
-  ///第一次Build即将调用
+  ///onDidBuild 之前被调用
   @mustCallSuper
-  void onPreBuild(BuildContext context) {
+  void onPreBuild() {
     vclog("onPreBuild");
   }
 
@@ -694,6 +693,7 @@ class BaseElement extends StatefulElement {
     if (_old != _new) {
       ///延迟35毫秒,30帧率,基本上可以保证已经渲染完了,可以直接在onDidBuild里面做些操作了
       Future.delayed(Duration(milliseconds: 35), () {
+        (widget as BaseView).vc.onPreBuild();
         (widget as BaseView).vc.onDidBuild();
       });
     }

@@ -24,6 +24,21 @@ void main() {
   //runApp(homevc.getView());
 }
 
+class prjNetWapper extends NetWapper {
+  prjNetWapper() : super("http://xxxx.com");
+
+  @override
+  String getLang() => '';
+
+  @override
+  String getToken() => 'zh-CN';
+  static prjNetWapper _instance;
+  static prjNetWapper get shareClient {
+    if (_instance == null) _instance = prjNetWapper();
+    return _instance;
+  }
+}
+
 class HomeVC extends BaseVC {
   HomeVC() : super() {
     // int x = 0;
@@ -141,7 +156,7 @@ class HomeVC extends BaseVC {
     //this.showAlertInput("title").then((value) => log("sss:"+value) );
     //this.showSheet("title", ["选择1","选择2","选择3","选择4"] ).then((value) =>log(" sel:" + value.toString() ));
 
-    // NetWapper.shareClient().postPath("App/token", {
+    // prjNetWapper.shareClient.postPath("App/token", {
     //   "sid": "0ED6EFB419A542C786C5003C7857B196",
     //   "client": "app"
     // }).then((SResBase resb) {});

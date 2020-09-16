@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+typedef dynamic newFunc(Map<String, dynamic> e);
+
 class SResBase<T> {
   bool get mSuccess => mCode == 0;
   int mCode;
@@ -38,30 +40,31 @@ class SResBase<T> {
     mMsg = resb.mMsg;
     mData = resb.mData;
   }
+  List getDataAsList([newFunc f, String k]) {
+    if (!mSuccess) return [];
+    var t = (mData as Map)[k == null ? 'list' : k];
+    if (t != null && t is List) {
+      return t.map((e) => e == null ? null : f(e)).toList();
+    }
+    return [];
+  }
 }
 
-///数据模型基类,封装常用的方法
-typedef dynamic FetchFunc(Map<String, dynamic> json, dynamic instance);
-typedef dynamic FromJsonFunc(Map<String, dynamic> json);
-
-///如果配合 JsonSerializable 模块,我自己修改的版本使用
-///会判断类名是否以 ZW开头,如果是会多生成一个Fetch方法,否则和和原模块一样
 abstract class SAutoEx {
-  SAutoEx({Map<String, dynamic> json, FetchFunc fetchfunc}) {
-    ///如果有自定义的fetch方法,就用,否则就默认的
-    if (fetchfunc != null)
-      fetchfunc(json, this);
-    else
-      fetchIt(json);
+  SAutoEx([Map<String, dynamic> json]) {
+    fetchIt(json);
   }
 
-  ///填充类数据
-  void fetchIt(Map<String, dynamic> json) {}
+  ///JSON->对象,自己必须实现
+  void fetchIt(Map<String, dynamic> json);
+
+  ///对象 -> JSON,自己必须实现
+  Map<String, dynamic> toJson();
 
   ///将自己存储到本地
-  Future<bool> dumpSelf(String key, Map<String, dynamic> jsonmap) async {
+  Future<bool> dumpSelf(String key) async {
     SharedPreferences perfs = await SharedPreferences.getInstance();
-    return perfs.setString(key, json.encode(jsonmap));
+    return perfs.setString(key, json.encode(toJson()));
   }
 
   ///加载自己存储的数据
@@ -81,12 +84,5 @@ abstract class SAutoEx {
     if (_someopinited) throw Exception("some op had inited");
     _someopinited = true;
     return SResBase.infoWithOKString("成功");
-  }
-
-  ///直接生成List的对象
-  static dynamic toListFromJson(List list, FromJsonFunc func) {
-    return list
-        .map((e) => e == null ? null : func(e as Map<String, dynamic>))
-        ?.toList();
   }
 }

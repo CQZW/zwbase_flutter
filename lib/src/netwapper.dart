@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:ui';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -17,26 +16,19 @@ resb => { code,data,msg}
 
 */
 
-class NetWapper {
-  static void setBaseURL(String url) {
-    if (_g_baseurl != null) return;
-    _g_baseurl = url;
-  }
-
-  //基础URL请求
-  static String _g_baseurl = null;
-
-  static NetWapper _g_nstance;
-
+abstract class NetWapper {
   Dio _dio;
-  static NetWapper shareClient() {
-    if (_g_nstance == null) _g_nstance = NetWapper(_g_baseurl);
-    return _g_nstance;
-  }
+
+  ///子类自己实现,因为需要自己实现  getToken,getLang等
+  //static NetWapper _g_nstance;
+//   static NetWapper shareClient() {
+//     if (_g_nstance == null) _g_nstance = NetWapper(_g_baseurl);
+//     return _g_nstance;
+//   }
 
   String _baseurl;
   NetWapper(String baseurl) {
-    assert(baseurl != null, "call setBaseURL frist...");
+    assert(baseurl != null, "baseurl must has...");
     this._baseurl = baseurl;
     _initNetWapper();
   }
@@ -50,10 +42,10 @@ class NetWapper {
   }
 
   ///获取认证token
-  String getToken() => '';
+  String getToken(); // => '';
 
   ///获取设备语言设置
-  String getLang() => 'zh-CN';
+  String getLang(); // => 'zh-CN';
 
   ///请求之前做些额外处理,比如数据加密,添加公共字段
   Future<Map> preDeal(String path, Map param) async {
@@ -83,7 +75,7 @@ class NetWapper {
       String url = makeApiPath(path);
       Map reqparam = await preDeal(path, param);
 
-      log("req url:" + _g_baseurl + url + " param:" + reqparam.toString());
+      log("req url:" + url + " param:" + reqparam.toString());
       Response<String> resb = await _dio.post(
         url,
         data: reqparam,
