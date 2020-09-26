@@ -10,6 +10,7 @@ import 'package:zwbase_flutter/zwbase_flutter.dart';
 
 import 'zwhud.dart';
 import 'zwrefreshlistvc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 ///这里是参考之前IOS的基类,将常用的方法封装了
 abstract class ViewCtr {
@@ -231,6 +232,12 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
       title: BaseVC.mappname,
       home: t,
       theme: getThemeData(context),
+
+      ///这玩意没搞懂~~,
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
       localeResolutionCallback: onGetLocalInfo,
       supportedLocales: getSupportedLocals(),
       //locale: ,先不考虑那么复杂的情况,本地这个就先不管了,遇到书写顺序有问题的再说
@@ -242,6 +249,7 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
     //记录当前系统的语言,和地区设置
     sysLang = locale.languageCode;
     sysCountry = locale.countryCode;
+    vclog("get app local info:$locale");
     return locale;
   }
 
@@ -334,46 +342,46 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
     extOverlayer = ZWHud(showType: 0, showMsg: msg);
   }
 
-  VoidCallback _whenDismisscb;
+  VoidCallback whenDismisscb;
 
   ///显示HUD错误信息
   void hudShowErrMsg(String msg, {VoidCallback dismisscb}) {
-    _whenDismisscb = dismisscb;
+    whenDismisscb = dismisscb;
     extOverlayer = ZWHud(
       showType: 2,
       showMsg: msg,
     );
-    _autoDismissHUD(msg.length > 11 ? 3000 : 1500);
+    autoDismissHUD(msg.length > 11 ? 3000 : 1500);
   }
 
   ///显示HUD 成功新
   void hudShowSuccessMsg(String msg, {VoidCallback dismisscb}) {
-    _whenDismisscb = dismisscb;
+    whenDismisscb = dismisscb;
     extOverlayer = ZWHud(
       showType: 1,
       showMsg: msg,
     );
-    _autoDismissHUD(msg.length > 11 ? 3000 : 1500);
+    autoDismissHUD(msg.length > 11 ? 3000 : 1500);
   }
 
   void hudShowInfoMsg(String msg, {VoidCallback dismisscb}) {
-    _whenDismisscb = dismisscb;
+    whenDismisscb = dismisscb;
     extOverlayer = ZWHud(
       showType: 3,
       showMsg: msg,
     );
-    _autoDismissHUD(msg.length > 11 ? 3000 : 1500);
+    autoDismissHUD(msg.length > 11 ? 3000 : 1500);
   }
 
-  void _autoDismissHUD([int dealy = 3000]) {
+  void autoDismissHUD([int dealy = 3000]) {
     Future.delayed(Duration(milliseconds: dealy), () => this.hudDismiss());
   }
 
   ///消失HUD
   void hudDismiss({VoidCallback dismisscb}) {
-    _whenDismisscb = dismisscb;
+    whenDismisscb = dismisscb;
     extOverlayer = null;
-    _whenDismisscb?.call();
+    whenDismisscb?.call();
   }
 
   ///页面名字,用于统计
