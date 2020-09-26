@@ -20,7 +20,10 @@ abstract class ViewCtr {
   Widget vcBuildWidget(BuildContext context, BaseState state) {
     _context = context;
     _state = state;
-    return realBuildWidget(context);
+    if (_isInited)
+      return realBuildWidget(context);
+    else
+      return Container();
   }
 
   ///控制器的真正build方法
@@ -39,11 +42,25 @@ abstract class ViewCtr {
     _state?.setState(() {});
   }
 
-  ///初始化被调用,状态的initState被执行
+  ///初始化控制器,子类自己初始化完成之后,调用父类
+  ///inited 告诉父类,是否初始化完成了,可以显示了,
+  ///如果false,那么后续尽快调用 allInitOK,否则 realBuildWidget 不会被执行
+  ///如果ture,那么表明都初始化完成了,会按流程执行 realBuildWidget
+  ///这里这样设计原因是,需要找到一个异步加载APP运行必须要的数据的机会,
   @mustCallSuper
-  void onInitVC() {
+  void onInitVC([bool inited = true]) {
     vclog("onInitVC");
+    _isInited = inited;
   }
+
+  ///所有初始化工作完成了,可以开始真正的执行 realBuildWidget,
+  ///这个用于显示界面必须要的初始化动作,
+  void allInitOK() {
+    _isInited = true;
+    updateUI();
+  }
+
+  bool _isInited = false;
 
   ///调试重新热加载,reassemble被执行
   @mustCallSuper
@@ -211,8 +228,33 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
     );
 
     return MaterialApp(
-        title: BaseVC.mappname, home: t, theme: getThemeData(context));
+      title: BaseVC.mappname,
+      home: t,
+      theme: getThemeData(context),
+      localeResolutionCallback: onGetLocalInfo,
+      supportedLocales: getSupportedLocals(),
+      //locale: ,先不考虑那么复杂的情况,本地这个就先不管了,遇到书写顺序有问题的再说
+    );
   }
+
+  ///当获取到区域信息之后的回调
+  Locale onGetLocalInfo(Locale locale, Iterable<Locale> supportedLocales) {
+    //记录当前系统的语言,和地区设置
+    sysLang = locale.languageCode;
+    sysCountry = locale.countryCode;
+    return locale;
+  }
+
+  ///子类重载..
+  List<Locale> getSupportedLocals() {
+    return [Locale('zh'), Locale('en')];
+  }
+
+  ///当前系统的语言,默认英语
+  static String sysLang = 'en';
+
+  ///当前系统的地区,国家
+  static String sysCountry = 'US';
 
   ///获取主题数据
   ThemeData getThemeData(BuildContext context) {
