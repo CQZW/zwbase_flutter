@@ -37,7 +37,7 @@ class ZWRefreshView extends StatefulWidget {
   final bool hasHeader;
   final bool hasFooter;
 
-  ///是不是外面在手动强制下拉刷新
+  ///是不是外面在手动强制下拉刷新.这里估计有问题
   bool isManualRefreshing = false;
 
   ZWRefreshView(

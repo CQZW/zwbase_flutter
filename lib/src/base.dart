@@ -17,6 +17,8 @@ abstract class ViewCtr {
   BuildContext _context;
   BaseState _state;
 
+  MediaQueryData mMediaQueryData;
+
   ///衔接state的 build 方法,将控件布局引入到控制器
   Widget vcBuildWidget(BuildContext context, BaseState state) {
     _context = context;
@@ -24,7 +26,12 @@ abstract class ViewCtr {
     if (_isInited)
       return realBuildWidget(context);
     else
-      return Container();
+      return waitingNecessaryOp();
+  }
+
+  ///等待必须要的操作的时候UI显示,
+  Widget waitingNecessaryOp() {
+    return Center(child: Text("加载中..."));
   }
 
   ///控制器的真正build方法
@@ -212,6 +219,8 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
 
   ///创建主要的控件部分,导航栏,tabbar,返回按钮,右侧按钮,标题等,底部tabbar由外部创建传入即可
   Widget realBuildWidget(BuildContext context) {
+    mMediaQueryData = MediaQuery.of(context);
+
     Widget t = Scaffold(
         resizeToAvoidBottomInset: false,
         appBar: makeTopBar(context),
@@ -232,6 +241,7 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
       title: BaseVC.mappname,
       home: t,
       theme: getThemeData(context),
+      debugShowCheckedModeBanner: mshowDebugBanner,
 
       ///这玩意没搞懂~~,
       localizationsDelegates: [
@@ -243,6 +253,9 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
       //locale: ,先不考虑那么复杂的情况,本地这个就先不管了,遇到书写顺序有问题的再说
     );
   }
+
+  //是否显示右上角的调试图标
+  bool mshowDebugBanner = true;
 
   ///当获取到区域信息之后的回调
   Locale onGetLocalInfo(Locale locale, Iterable<Locale> supportedLocales) {
@@ -438,6 +451,10 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
       Navigator.pop(_context, mRetVal);
       return;
     }
+    if (this._bIsPresent) {
+      dismissPreSentVC();
+      return;
+    }
     log("can not pop ,now is root");
   }
 
@@ -477,16 +494,26 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   ///表明当前VC是否 是present来的
   bool _bIsPresent = false;
 
+  ///上一个界面的context
+  BuildContext _presentMeContext;
+
   ///�������态弹出VC,
   Future<dynamic> presentVC(BaseVC to) {
     to._bIsPresent = true;
     to._bHasNavView = this._bHasNavView || _bIsNavRootVC;
+    to._presentMeContext = this._context;
     return Navigator.of(this._context).push(MaterialPageRoute(
         fullscreenDialog: true,
         maintainState: true,
         builder: (context) {
           return to.getView();
         }));
+  }
+
+  ///消失 presentVC来的VC
+  void dismissPreSentVC() {
+    if (this._presentMeContext != null)
+      Navigator.pop(this._presentMeContext, mRetVal);
   }
 
   void delayBackClicked() {
@@ -753,7 +780,7 @@ class BaseElement extends StatefulElement {
 ///视图中间件...串联控制器的地方将控制器和state链接起来
 // ignore: must_be_immutable
 class BaseView extends StatefulWidget {
-  ViewCtr vc;
+  final ViewCtr vc;
   BaseView({Key key, this.vc}) : super(key: key);
 
   @override

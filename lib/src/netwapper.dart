@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:package_info/package_info.dart';
 import 'datamodel.dart';
 /*
@@ -17,7 +18,7 @@ resb => { code,data,msg}
 */
 
 abstract class NetWapper {
-  Dio _dio;
+  Dio dio;
 
   ///子类自己实现,因为需要自己实现  getToken,getLang等
   //static NetWapper _g_nstance;
@@ -26,19 +27,19 @@ abstract class NetWapper {
 //     return _g_nstance;
 //   }
 
-  String _baseurl;
+  String baseurl;
   NetWapper(String baseurl) {
     assert(baseurl != null, "baseurl must has...");
-    this._baseurl = baseurl;
+    this.baseurl = baseurl;
     _initNetWapper();
   }
 
   void _initNetWapper() {
     BaseOptions baseopt = BaseOptions(
-      connectTimeout: 1000 * 30,
-      receiveTimeout: 1000 * 30,
+      connectTimeout: kReleaseMode ? (1000 * 30) : (1000 * 3600),
+      receiveTimeout: kReleaseMode ? (1000 * 30) : (1000 * 3600),
     );
-    _dio = Dio(baseopt);
+    dio = Dio(baseopt);
   }
 
   ///获取认证token
@@ -47,17 +48,36 @@ abstract class NetWapper {
   ///获取设备语言设置
   String getLang(); // => 'zh-CN';
 
-  ///请求之前做些额外处理,比如数据加密,添加公共字段
-  Future<Map> preDeal(String path, Map param) async {
-    Map r = Map();
+  ///获取设备ID
+  Future<String> getDeviceId();
+
+  ///请求之前做些额外处理,比如数据加密
+  Future<Map<String, dynamic>> preDeal(
+      String path, Map<String, dynamic> param) async {
+    Map<String, dynamic> r = Map<String, dynamic>();
+
+    ///如果需要加密,这里处理,只加密data字段
+    //r["data"] = json.encode(param != null ? param : Map());
+    //r["data"] = param != null ? param : Map();
+    r = param != null ? param : Map<String, dynamic>();
+    return r;
+  }
+
+  ///预处理header,公共参数放到header里面
+  Future<Map<String, dynamic>> preHeader(
+      String path, Map<String, dynamic> param) async {
+    Map<String, dynamic> r = Map<String, dynamic>();
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     r["version"] = packageInfo.version;
     r["lang"] = getLang();
     r['token'] = getToken();
-    r['client'] = defaultTargetPlatform.toString();
-
-    ///如果需要加密,这里处理,只加密data字段
-    r["data"] = json.encode(param != null ? param : Map());
+    r['deviceId'] = await getDeviceId();
+    if (defaultTargetPlatform == TargetPlatform.iOS)
+      r['client'] = 'ios';
+    else if (defaultTargetPlatform == TargetPlatform.android)
+      r['client'] = 'android';
+    else
+      r['client'] = 'unkown';
     return r;
   }
 
@@ -70,16 +90,19 @@ abstract class NetWapper {
     return r;
   }
 
-  Future<SResBase> postPath(String path, Map param) async {
+  Future<SResBase> postPath(String path, Map<String, dynamic> param) async {
     try {
       String url = makeApiPath(path);
-      Map reqparam = await preDeal(path, param);
-
-      log("req url:" + url + " param:" + reqparam.toString());
-      Response<String> resb = await _dio.post(
-        url,
-        data: reqparam,
-      );
+      var reqparam = await preDeal(path, param);
+      var header = await preHeader(path, param);
+      log("req url:" +
+          url +
+          " param:" +
+          reqparam.toString() +
+          " header:" +
+          header.toString());
+      Response<String> resb = await dio.post(url,
+          data: reqparam, options: Options(headers: header));
       if (resb != null) {
         log("resb url:" + url + " data:" + resb.data);
         return SResBase.baseWithData(await dealPost(resb.data));
@@ -87,6 +110,7 @@ abstract class NetWapper {
         return SResBase.infoWithErrorString("网络请求错误");
       }
     } catch (e) {
+      log("resb exp:" + e.toString());
       return SResBase.infoWithErrorString("网络请求异常");
     }
   }
@@ -94,6 +118,6 @@ abstract class NetWapper {
   String makeApiPath(String path) {
     //如果是http开头就是全路径
     if (path.startsWith("http")) return path;
-    return _baseurl + path;
+    return this.baseurl + path;
   }
 }

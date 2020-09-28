@@ -37,6 +37,12 @@ class prjNetWapper extends NetWapper {
     if (_instance == null) _instance = prjNetWapper();
     return _instance;
   }
+
+  @override
+  Future<String> getDeviceId() async {
+    // TODO: implement getDeviceId
+    return "";
+  }
 }
 
 class HomeVC extends BaseVC {
@@ -184,13 +190,6 @@ class HomeVC extends BaseVC {
     vc.itid = 1;
     presentVC(vc);
   }
-
-  MediaQueryData mMediaQueryData;
-  @override
-  void onDidBuild() {
-    super.onDidBuild();
-    mMediaQueryData = MediaQuery.of(this.getContext());
-  }
 }
 
 class MeVC extends BaseVC {
@@ -300,8 +299,13 @@ class ForPush extends BaseVC {
     return Center(
         child: Row(children: <Widget>[
       Text("test for  $itid"),
-      IconButton(icon: Icon(Icons.share), onPressed: clicked_push)
+      IconButton(icon: Icon(Icons.share), onPressed: clicked_push),
+      FlatButton(child: Text("dismis_prsend"), onPressed: dismissPrent)
     ]));
+  }
+
+  void dismissPrent() {
+    dismissPreSentVC();
   }
 
   void clicked_push() {

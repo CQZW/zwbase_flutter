@@ -19,20 +19,21 @@ class SResBase<T> {
     mData = null;
   }
   SResBase.infoWithErrorString(String errstr) {
-    mCode = 0;
+    mCode = 1;
     mMsg = errstr;
     mData = null;
   }
   SResBase.baseWithData(Map<String, dynamic> data) {
-    if (data["status"] == null) {
+    if (data["code"] == null) {
       SResBase.infoWithErrorString("请求服务器失败,请稍微再试");
       return;
     }
+    if (data["code"] is! int) {
+      SResBase.infoWithErrorString("服务器数据,请稍微再试");
+      return;
+    }
+    mCode = data["code"] as int;
     mMsg = data["msg"] ?? "未知信息";
-    if (data["status"])
-      mCode = 0;
-    else
-      mCode = 1;
     mData = data["data"];
   }
   SResBase.baseWithSResb(SResBase resb) {
@@ -52,7 +53,7 @@ class SResBase<T> {
 
 abstract class SAutoEx {
   SAutoEx([Map<String, dynamic> json]) {
-    fetchIt(json);
+    if (json != null) fetchIt(json);
   }
 
   ///JSON->对象,自己必须实现
