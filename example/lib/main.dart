@@ -28,10 +28,15 @@ class prjNetWapper extends NetWapper {
   prjNetWapper() : super("http://xxxx.com");
 
   @override
-  String getLang() => '';
+  Future<String> getLang() async {
+    return '';
+  }
 
   @override
-  String getToken() => 'zh-CN';
+  Future<String> getToken() async {
+    return 'zh-CN';
+  }
+
   static prjNetWapper _instance;
   static prjNetWapper get shareClient {
     if (_instance == null) _instance = prjNetWapper();
@@ -267,7 +272,10 @@ class MeVC extends BaseVC {
     ForPush vc = ForPush();
     vc.mPageName = "forpush";
     vc.itid = 2;
-    pushToVC(vc);
+    vc.mBackGroudColor = Colors.transparent;
+    //pushToVC(vc);
+    //pushToVCFade(vc);
+    pushToTransparentVC(vc);
   }
 
   void setto_vc() {
@@ -296,12 +304,14 @@ class ForPush extends BaseVC {
   int itid = 0;
   @override
   Widget makePageBody(BuildContext context) {
-    return Center(
-        child: Row(children: <Widget>[
-      Text("test for  $itid"),
-      IconButton(icon: Icon(Icons.share), onPressed: clicked_push),
-      FlatButton(child: Text("dismis_prsend"), onPressed: dismissPrent)
-    ]));
+    return Container(
+        color: Color.fromARGB(50, 0, 0, 0),
+        child: Center(
+            child: Row(children: <Widget>[
+          Text("test for  $itid"),
+          IconButton(icon: Icon(Icons.share), onPressed: clicked_push),
+          FlatButton(child: Text("dismis_prsend"), onPressed: dismissPrent)
+        ])));
   }
 
   void dismissPrent() {

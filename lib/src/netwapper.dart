@@ -43,10 +43,10 @@ abstract class NetWapper {
   }
 
   ///获取认证token
-  String getToken(); // => '';
+  Future<String> getToken(); // => '';
 
   ///获取设备语言设置
-  String getLang(); // => 'zh-CN';
+  Future<String> getLang(); // => 'zh-CN';
 
   ///获取设备ID
   Future<String> getDeviceId();
@@ -69,8 +69,8 @@ abstract class NetWapper {
     Map<String, dynamic> r = Map<String, dynamic>();
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     r["version"] = packageInfo.version;
-    r["lang"] = getLang();
-    r['token'] = getToken();
+    r["lang"] = await getLang();
+    r['token'] = await getToken();
     r['deviceId'] = await getDeviceId();
     if (defaultTargetPlatform == TargetPlatform.iOS)
       r['client'] = 'ios';

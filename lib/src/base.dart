@@ -135,10 +135,10 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   Widget getView({Key key}) {
     assert(mPageName != null, "为页面取个名字");
     //如果是导航的根view,那么需要包裹一层导航视图,
-    if (_bIsNavRootVC)
+    if (bIsNavRootVC)
       return BaseNavView(vc: this, view: BaseView(key: key, vc: this));
     //如果已经外层有了导航视图,那么这里不需要包裹导航视图了,普通页面都是这个
-    if (_bHasNavView) return BaseView(key: key, vc: this);
+    if (bHasNavView) return BaseView(key: key, vc: this);
 
     //一个页面如果不是被present的,也不是导航的根,也不是导航下面的普通页面,,,那不对了
     assert(false, "not way.....");
@@ -217,11 +217,15 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
 
   static String mappname = "APP_NAME";
 
+  ///页面的背景颜色,透明,可以制作半透明的控制器
+  Color mBackGroudColor;
+
   ///创建主要的控件部分,导航栏,tabbar,返回按钮,右侧按钮,标题等,底部tabbar由外部创建传入即可
   Widget realBuildWidget(BuildContext context) {
     mMediaQueryData = MediaQuery.of(context);
 
     Widget t = Scaffold(
+        backgroundColor: mBackGroudColor,
         resizeToAvoidBottomInset: false,
         appBar: makeTopBar(context),
         body: wapperForExt(makePageBody(context), context),
@@ -247,6 +251,9 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
+        //奇葩问题,
+        //https://blog.csdn.net/julystroy/article/details/90231588
+        const FallbackCupertinoLocalisationsDelegate(),
       ],
       localeResolutionCallback: onGetLocalInfo,
       supportedLocales: getSupportedLocals(),
@@ -435,10 +442,10 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   void onRightBtClicked() {}
 
   ///是否已经添加了导航视图,Flutter如果要支持导航,需要顶层为 StatelessWidget
-  bool _bHasNavView = false;
-  bool _bIsNavRootVC = false;
+  bool bHasNavView = false;
+  bool bIsNavRootVC = false;
   void iAMNavRootView() {
-    _bIsNavRootVC = true;
+    bIsNavRootVC = true;
 
     ///如果是导航的rootview,通常自动把返回按钮隐藏了
     mHidenBackBt = true;
@@ -451,7 +458,7 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
       Navigator.pop(_context, mRetVal);
       return;
     }
-    if (this._bIsPresent) {
+    if (this.bIsPresent) {
       dismissPreSentVC();
       return;
     }
@@ -465,8 +472,8 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
 
   ///PUSH到指定VC,并且有返回异步返回值
   Future<dynamic> pushToVC(BaseVC to) {
-    to._bHasNavView = this._bHasNavView || _bIsNavRootVC;
-    to._bIsPresent = this._bIsPresent;
+    to.bHasNavView = this.bHasNavView || bIsNavRootVC;
+    to.bIsPresent = this.bIsPresent;
     return Navigator.of(this._context).push(MaterialPageRoute(
         maintainState: true,
         builder: (context) {
@@ -474,10 +481,34 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
         }));
   }
 
+  ///PUSH到指定VC,并且有返回异步返回值,淡入动画,
+  Future<dynamic> pushToVCFade(BaseVC to) {
+    to.bHasNavView = this.bHasNavView || bIsNavRootVC;
+    to.bIsPresent = this.bIsPresent;
+    return Navigator.of(this._context).push(PageRouteBuilder(
+      transitionDuration: Duration(milliseconds: 500),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return new FadeTransition(
+          //使用渐隐渐入过渡,
+          opacity: animation,
+          child: to.getView(), //路由B
+        );
+      },
+    ));
+  }
+
+  ///PUSH到指定VC,并且有返回异步返回值,可以实现透明的VC
+  Future<dynamic> pushToTransparentVC(BaseVC to) {
+    to.bHasNavView = this.bHasNavView || bIsNavRootVC;
+    to.bIsPresent = this.bIsPresent;
+    return Navigator.of(this._context)
+        .push(CustomTransitionRoute((context) => to.getView()));
+  }
+
   ///直接跳转到指定VC,不保留当前页面在栈里面
   void setToVC(BaseVC to) {
-    to._bHasNavView = this._bHasNavView || _bIsNavRootVC;
-    to._bIsPresent = this._bIsPresent;
+    to.bHasNavView = this.bHasNavView || bIsNavRootVC;
+    to.bIsPresent = this.bIsPresent;
     if (Navigator.of(this._context).canPop()) {
       Navigator.pushReplacement(
           this._context,
@@ -492,15 +523,15 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   }
 
   ///表明当前VC是否 是present来的
-  bool _bIsPresent = false;
+  bool bIsPresent = false;
 
   ///上一个界面的context
   BuildContext _presentMeContext;
 
   ///�������态弹出VC,
   Future<dynamic> presentVC(BaseVC to) {
-    to._bIsPresent = true;
-    to._bHasNavView = this._bHasNavView || _bIsNavRootVC;
+    to.bIsPresent = true;
+    to.bHasNavView = this.bHasNavView || bIsNavRootVC;
     to._presentMeContext = this._context;
     return Navigator.of(this._context).push(MaterialPageRoute(
         fullscreenDialog: true,
@@ -998,4 +1029,57 @@ class ZWTickBt extends ViewCtr {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
     );
   }
+}
+
+///自定义的过度路由,主要是创建透明的路由页面
+class CustomTransitionRoute extends PageRoute {
+  CustomTransitionRoute(this.builder) : super();
+  final WidgetBuilder builder;
+
+  @override
+  Color get barrierColor => null;
+
+  @override
+  bool get opaque => false;
+
+  @override
+  String get barrierLabel => null;
+
+  @override
+  Widget buildPage(BuildContext context, Animation<double> animation,
+      Animation<double> secondaryAnimation) {
+    return this.builder(context);
+  }
+
+  @override
+  bool get maintainState => true;
+
+  @override
+  Duration get transitionDuration => Duration(milliseconds: 500);
+
+  @override
+  Widget buildTransitions(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return FadeTransition(opacity: animation, child: child);
+  }
+}
+
+//https://blog.csdn.net/julystroy/article/details/90231588
+class FallbackCupertinoLocalisationsDelegate
+    extends LocalizationsDelegate<CupertinoLocalizations> {
+  const FallbackCupertinoLocalisationsDelegate();
+
+  @override
+  bool isSupported(Locale locale) => true;
+
+  @override
+  Future<CupertinoLocalizations> load(Locale locale) =>
+      DefaultCupertinoLocalizations.load(locale);
+
+  @override
+  bool shouldReload(FallbackCupertinoLocalisationsDelegate old) => false;
 }
