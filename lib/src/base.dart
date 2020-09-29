@@ -497,13 +497,14 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
     ));
   }
 
-  ///PUSH到指定VC,并且有返回异步返回值,可以实现透明的VC
+  ///PUSH到指定VC,并且有返回异步返回值,可以实现透明的VC,默认是淡入动画
   Future<dynamic> pushToTransparentVC(BaseVC to) {
     to.bHasNavView = this.bHasNavView || bIsNavRootVC;
     to.bIsPresent = this.bIsPresent;
     return Navigator.of(this._context)
         .push(CustomTransitionRoute((context) => to.getView()));
   }
+  //更多路由动画. https://www.cnblogs.com/joe235/p/11230780.html
 
   ///直接跳转到指定VC,不保留当前页面在栈里面
   void setToVC(BaseVC to) {
@@ -1033,8 +1034,9 @@ class ZWTickBt extends ViewCtr {
 
 ///自定义的过度路由,主要是创建透明的路由页面
 class CustomTransitionRoute extends PageRoute {
-  CustomTransitionRoute(this.builder) : super();
+  CustomTransitionRoute(this.builder, {this.transitBuilder}) : super();
   final WidgetBuilder builder;
+  final RouteTransitionsBuilder transitBuilder;
 
   @override
   Color get barrierColor => null;
@@ -1055,7 +1057,7 @@ class CustomTransitionRoute extends PageRoute {
   bool get maintainState => true;
 
   @override
-  Duration get transitionDuration => Duration(milliseconds: 500);
+  Duration get transitionDuration => Duration(milliseconds: 200);
 
   @override
   Widget buildTransitions(
@@ -1064,6 +1066,8 @@ class CustomTransitionRoute extends PageRoute {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
+    if (this.transitBuilder != null)
+      return this.transitBuilder(context, animation, secondaryAnimation, child);
     return FadeTransition(opacity: animation, child: child);
   }
 }
