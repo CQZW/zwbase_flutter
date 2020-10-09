@@ -17,16 +17,16 @@ abstract class ViewCtr {
   BuildContext _context;
   BaseState _state;
 
+  //是否显示右上角的调试图标
+  bool get mShowDebugBanner => true;
+
   MediaQueryData mMediaQueryData;
 
   ///衔接state的 build 方法,将控件布局引入到控制器
   Widget vcBuildWidget(BuildContext context, BaseState state) {
     _context = context;
     _state = state;
-    if (_isInited)
-      return realBuildWidget(context);
-    else
-      return waitingNecessaryOp();
+    return realBuildWidget(context);
   }
 
   ///等待必须要的操作的时候UI显示,
@@ -56,19 +56,9 @@ abstract class ViewCtr {
   ///如果ture,那么表明都初始化完成了,会按流程执行 realBuildWidget
   ///这里这样设计原因是,需要找到一个异步加载APP运行必须要的数据的机会,
   @mustCallSuper
-  void onInitVC([bool inited = true]) {
+  void onInitVC() {
     vclog("onInitVC");
-    _isInited = inited;
   }
-
-  ///所有初始化工作完成了,可以开始真正的执行 realBuildWidget,
-  ///这个用于显示界面必须要的初始化动作,
-  void allInitOK() {
-    _isInited = true;
-    updateUI();
-  }
-
-  bool _isInited = false;
 
   ///调试重新热加载,reassemble被执行
   @mustCallSuper
@@ -134,7 +124,7 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   //获取控制器对应的视图
   Widget getView({Key key}) {
     assert(mPageName != null, "为页面取个名字");
-    //如果是导航的根view,那么需要包裹一层导航视图,
+    //如果是导航的根view,那么需要包裹一层导航视图,主要是最外层必须StatelessWidget,
     if (bIsNavRootVC)
       return BaseNavView(vc: this, view: BaseView(key: key, vc: this));
     //如果已经外层有了导航视图,那么这里不需要包裹导航视图了,普通页面都是这个
@@ -245,7 +235,7 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
       title: BaseVC.mappname,
       home: t,
       theme: getThemeData(context),
-      debugShowCheckedModeBanner: mshowDebugBanner,
+      debugShowCheckedModeBanner: mShowDebugBanner,
 
       ///这玩意没搞懂~~,
       localizationsDelegates: [
@@ -260,9 +250,6 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
       //locale: ,先不考虑那么复杂的情况,本地这个就先不管了,遇到书写顺序有问题的再说
     );
   }
-
-  //是否显示右上角的调试图标
-  bool mshowDebugBanner = true;
 
   ///当获取到区域信息之后的回调
   Locale onGetLocalInfo(Locale locale, Iterable<Locale> supportedLocales) {
@@ -499,6 +486,7 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
 
   ///PUSH到指定VC,并且有返回异步返回值,可以实现透明的VC,默认是淡入动画
   Future<dynamic> pushToTransparentVC(BaseVC to) {
+    to.mBackGroudColor = Colors.transparent;
     to.bHasNavView = this.bHasNavView || bIsNavRootVC;
     to.bIsPresent = this.bIsPresent;
     return Navigator.of(this._context)
@@ -821,7 +809,7 @@ class BaseView extends StatefulWidget {
   StatefulElement createElement() => BaseElement(this);
 }
 
-///导航View,默认会添加名为 root 的路由表,用于返回首页
+///导航View,
 ///主要是外层需要包裹 StatelessWidget的组件..
 class BaseNavView extends StatelessWidget {
   final BaseView view;
@@ -833,6 +821,7 @@ class BaseNavView extends StatelessWidget {
     return MaterialApp(
         title: BaseVC.mappname,
         home: view,
+        debugShowCheckedModeBanner: vc.mShowDebugBanner,
         theme: ThemeData(
           primarySwatch: Colors.blue,
           visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -952,6 +941,7 @@ class BaseTabBarVC extends BaseVC {
 
     return MaterialApp(
         title: "tabbar",
+        debugShowCheckedModeBanner: mShowDebugBanner,
         home: Scaffold(
             body: PageView.builder(
           physics: NeverScrollableScrollPhysics(),

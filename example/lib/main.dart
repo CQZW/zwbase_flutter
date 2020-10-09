@@ -5,7 +5,6 @@ import 'package:zwbase_flutter/zwbase_flutter.dart';
 
 void main() {
   BaseTabBarVC vc = BaseTabBarVC();
-
   HomeVC homevc = HomeVC();
   homevc.iAMNavRootView();
   homevc.mPageName = "主页";
@@ -74,6 +73,7 @@ class HomeVC extends BaseVC {
         txt: "bbbbbb",
         defimg: AssetImage("assets/default_video.png")));
   }
+  bool showDebugBanner() => false;
 
   int _testv = 1;
 
@@ -272,7 +272,7 @@ class MeVC extends BaseVC {
     ForPush vc = ForPush();
     vc.mPageName = "forpush";
     vc.itid = 2;
-    vc.mBackGroudColor = Colors.transparent;
+
     //pushToVC(vc);
     //pushToVCFade(vc);
     pushToTransparentVC(vc);
