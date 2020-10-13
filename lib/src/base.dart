@@ -337,9 +337,10 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
       updateUI();
       animationCtrForExt.reset();
       animationCtrForExt.forward();
-    } else {
+    } else if (_extOverlayer != null) {
       animationCtrForExt.reverse().then((value) {
         whenDismisscb?.call();
+        whenDismisscb = null;
         _extOverlayer = null;
         updateUI();
       });
