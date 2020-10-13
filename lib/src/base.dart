@@ -335,9 +335,11 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
         child: val,
       );
       updateUI();
+      animationCtrForExt.reset();
       animationCtrForExt.forward();
     } else {
       animationCtrForExt.reverse().then((value) {
+        whenDismisscb?.call();
         _extOverlayer = null;
         updateUI();
       });
@@ -352,43 +354,39 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   VoidCallback whenDismisscb;
 
   ///显示HUD错误信息
-  void hudShowErrMsg(String msg, {VoidCallback dismisscb}) {
-    whenDismisscb = dismisscb;
+  Future<void> hudShowErrMsg(String msg) {
     extOverlayer = ZWHud(
       showType: 2,
       showMsg: msg,
     );
-    autoDismissHUD(msg.length > 11 ? 3000 : 1500);
+    return autoDismissHUD(msg.length > 11 ? 3000 : 1500);
   }
 
   ///显示HUD 成功新
-  void hudShowSuccessMsg(String msg, {VoidCallback dismisscb}) {
-    whenDismisscb = dismisscb;
+  Future<void> hudShowSuccessMsg(String msg) {
     extOverlayer = ZWHud(
       showType: 1,
       showMsg: msg,
     );
-    autoDismissHUD(msg.length > 11 ? 3000 : 1500);
+    return autoDismissHUD(msg.length > 11 ? 3000 : 1500);
   }
 
-  void hudShowInfoMsg(String msg, {VoidCallback dismisscb}) {
-    whenDismisscb = dismisscb;
-    extOverlayer = ZWHud(
-      showType: 3,
-      showMsg: msg,
-    );
-    autoDismissHUD(msg.length > 11 ? 3000 : 1500);
+  Future<void> hudShowInfoMsg(String msg) {
+    extOverlayer = ZWHud(showType: 3, showMsg: msg);
+    return autoDismissHUD(msg.length > 11 ? 3000 : 1500);
   }
 
-  void autoDismissHUD([int dealy = 3000]) {
-    Future.delayed(Duration(milliseconds: dealy), () => this.hudDismiss());
+  Future<void> autoDismissHUD([int dealy = 3000]) {
+    return Future.delayed(
+        Duration(milliseconds: dealy), () => this.hudDismiss());
   }
 
   ///消失HUD
-  void hudDismiss({VoidCallback dismisscb}) {
-    whenDismisscb = dismisscb;
+  Future<void> hudDismiss() {
+    var comp = Completer();
+    whenDismisscb = () => comp.complete();
     extOverlayer = null;
-    whenDismisscb?.call();
+    return comp.future;
   }
 
   ///页面名字,用于统计

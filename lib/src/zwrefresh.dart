@@ -1,7 +1,6 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 ///刷新回调,bheader 是头部,否则是底部,bstart 是开始刷新,否则完成刷新
@@ -84,7 +83,7 @@ class ZWRefreshState extends State<ZWRefreshView>
     this.footer = widget.hasFooter ? widget.createFooter() : null;
 
     anctr = AnimationController(
-        duration: const Duration(milliseconds: 200), vsync: this);
+        vsync: this, duration: const Duration(milliseconds: 200));
     anctr.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         log("AnimationStatus.completed");

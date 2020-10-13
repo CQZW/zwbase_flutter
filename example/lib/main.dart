@@ -214,17 +214,17 @@ class MeVC extends BaseVC {
           onPressed: () => this.presend_vc(), child: Text("prsent to vc")),
       FlatButton(
           onPressed: () {
-            hudShowSuccessMsg("show ok");
+            hudShowSuccessMsg("show ok").then((value) => log("dismissed"));
           },
           child: Text("show hud success")),
       FlatButton(
           onPressed: () {
-            hudShowErrMsg("show err");
+            hudShowErrMsg("show err").then((value) => log("dismissed"));
           },
           child: Text("show hud err")),
       FlatButton(
           onPressed: () {
-            hudShowInfoMsg("show info");
+            hudShowInfoMsg("show info").then((value) => log("dismissed"));
           },
           child: Text("show hud info")),
       FlatButton(
