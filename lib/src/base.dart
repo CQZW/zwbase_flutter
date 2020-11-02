@@ -97,6 +97,8 @@ abstract class ViewCtr {
     _state = null;
   }
 
+  void onAppLifecycleState(AppLifecycleState appState) {}
+
   ///是否自动保留,否则页面隐藏不显示的时候被移除了tree..,主要是tabbar的子页面
   bool wantKeepAlive = false;
 
@@ -219,7 +221,9 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
         resizeToAvoidBottomInset: false,
         appBar: makeTopBar(context),
         body: wapperForExt(makePageBody(context), context),
-        bottomNavigationBar: tabbar_Widget);
+        bottomNavigationBar: tabbar_Widget,
+        //去除虚拟键
+        resizeToAvoidBottomPadding: false);
     var l = [t];
 
     ///如果有扩展覆盖层,那么就用stack堆积起来
@@ -337,13 +341,20 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
       updateUI();
       animationCtrForExt.reset();
       animationCtrForExt.forward();
-    } else if (_extOverlayer != null) {
-      animationCtrForExt.reverse().then((value) {
+    } else {
+      //如果是要值空
+      if (_extOverlayer != null) {
+        animationCtrForExt.reverse().then((value) {
+          whenDismisscb?.call();
+          whenDismisscb = null;
+          _extOverlayer = null;
+          updateUI();
+        });
+      } else {
+        //如果已经是空了,那么立即返回cb,因为可能 whenDismisscb有人在等待
         whenDismisscb?.call();
         whenDismisscb = null;
-        _extOverlayer = null;
-        updateUI();
-      });
+      }
     }
   }
 
@@ -830,7 +841,10 @@ class BaseNavView extends StatelessWidget {
 
 ///状态中间件....
 class BaseState extends State<BaseView>
-    with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
+    with
+        AutomaticKeepAliveClientMixin,
+        TickerProviderStateMixin,
+        WidgetsBindingObserver {
   @override
   bool get wantKeepAlive => widget.vc.wantKeepAlive;
 
@@ -843,6 +857,8 @@ class BaseState extends State<BaseView>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
     widget.vc.onInitVC();
   }
 
@@ -854,6 +870,7 @@ class BaseState extends State<BaseView>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
     widget.vc.onDispose();
   }
@@ -862,6 +879,12 @@ class BaseState extends State<BaseView>
   void deactivate() {
     super.deactivate();
     widget.vc.onDidRemoved();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    widget.vc.onAppLifecycleState(state);
   }
 }
 

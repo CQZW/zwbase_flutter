@@ -47,6 +47,12 @@ class prjNetWapper extends NetWapper {
     // TODO: implement getDeviceId
     return "";
   }
+
+  @override
+  Future<String> getVersion() async {
+    // TODO: implement getVersion
+    return "";
+  }
 }
 
 class HomeVC extends BaseVC {
@@ -73,6 +79,11 @@ class HomeVC extends BaseVC {
         txt: "bbbbbb",
         defimg: AssetImage("assets/default_video.png")));
   }
+  @override
+  void onAppLifecycleState(AppLifecycleState appState) {
+    vclog('sss:$appState');
+  }
+
   bool showDebugBanner() => false;
 
   int _testv = 1;

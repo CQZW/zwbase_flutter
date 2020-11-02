@@ -3,8 +3,7 @@ import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
-import 'package:package_info/package_info.dart';
+
 import 'datamodel.dart';
 /*
 网络请求封装
@@ -28,18 +27,16 @@ abstract class NetWapper {
 //   }
 
   String baseurl;
-  NetWapper(String baseurl) {
+  NetWapper(String baseurl,
+      {int connectTimeout = 30 * 1000, int receiveTimeout = 30 * 1000}) {
     assert(baseurl != null, "baseurl must has...");
     this.baseurl = baseurl;
-    _initNetWapper();
+    initNetWapper(BaseOptions(
+        connectTimeout: connectTimeout, receiveTimeout: receiveTimeout));
   }
 
-  void _initNetWapper() {
-    BaseOptions baseopt = BaseOptions(
-      connectTimeout: kReleaseMode ? (1000 * 30) : (1000 * 3600),
-      receiveTimeout: kReleaseMode ? (1000 * 30) : (1000 * 3600),
-    );
-    dio = Dio(baseopt);
+  void initNetWapper(BaseOptions opt) {
+    dio = Dio(opt);
   }
 
   ///获取认证token
@@ -50,6 +47,9 @@ abstract class NetWapper {
 
   ///获取设备ID
   Future<String> getDeviceId();
+
+  ///获取版本信息
+  Future<String> getVersion();
 
   ///请求之前做些额外处理,比如数据加密
   Future<Map<String, dynamic>> preDeal(
@@ -67,8 +67,7 @@ abstract class NetWapper {
   Future<Map<String, dynamic>> preHeader(
       String path, Map<String, dynamic> param) async {
     Map<String, dynamic> r = Map<String, dynamic>();
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    r["version"] = packageInfo.version;
+    r["version"] = await getVersion();
     r["lang"] = await getLang();
     r['token'] = await getToken();
     r['deviceId'] = await getDeviceId();
@@ -102,7 +101,7 @@ abstract class NetWapper {
           " header:" +
           header.toString());
       Response<String> resb = await dio.post(url,
-          data: reqparam, options: Options(headers: header));
+          queryParameters: reqparam, options: Options(headers: header));
       if (resb != null) {
         log("resb url:" + url + " data:" + resb.data);
         return SResBase.baseWithData(await dealPost(resb.data));

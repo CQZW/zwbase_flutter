@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -36,11 +37,7 @@ class SResBase<T> {
     mMsg = data["msg"] ?? "未知信息";
     mData = data["data"];
   }
-  SResBase.baseWithSResb(SResBase resb) {
-    mCode = resb.mCode;
-    mMsg = resb.mMsg;
-    mData = resb.mData;
-  }
+
   List getDataAsList([newFunc f, String k]) {
     if (!mSuccess) return [];
     var t = (mData as Map)[k == null ? 'list' : k];
@@ -49,11 +46,21 @@ class SResBase<T> {
     }
     return [];
   }
+
+  ///转换成另外一个类型的数据,就拷贝了
+  SResBase<T> toTypeResb<T>() {
+    var r = SResBase<T>.infoWithOKString(this.mMsg);
+    r.mCode = this.mCode;
+    return r;
+  }
 }
 
 abstract class SAutoEx {
   SAutoEx([Map<String, dynamic> json]) {
-    if (json != null) fetchIt(json);
+    if (json != null)
+      fetchIt(json);
+    else
+      log("maybe null json,do't call fetchIt");
   }
 
   ///JSON->对象,自己必须实现
