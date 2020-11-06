@@ -327,10 +327,13 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
   Widget _extOverlayer;
   Widget get extOverlayer => _extOverlayer;
 
+  ///HUD动画时间
+  int get hudAnimationLong => 250;
+
   set extOverlayer(Widget val) {
     if (animationCtrForExt == null) {
       animationCtrForExt = AnimationController(
-          vsync: _state, duration: Duration(milliseconds: 250));
+          vsync: _state, duration: Duration(milliseconds: hudAnimationLong));
     }
     if (val != null) {
       animationCtrForExt.reset();

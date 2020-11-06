@@ -106,11 +106,11 @@ abstract class NetWapper {
         log("resb url:" + url + " data:" + resb.data);
         return SResBase.baseWithData(await dealPost(resb.data));
       } else {
-        return SResBase.infoWithErrorString("网络请求错误");
+        return SResBase.infoWithErrorString("网络请求错误", 3);
       }
     } catch (e) {
       log("resb exp:" + e.toString());
-      return SResBase.infoWithErrorString("网络请求异常");
+      return SResBase.infoWithErrorString("网络请求异常", 3);
     }
   }
 
