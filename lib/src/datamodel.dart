@@ -27,7 +27,7 @@ class SResBase<T> {
 
   ///创建通用对象,添加成功的描述
   SResBase.infoWithOKString(String okstr, [cdoe = 0, fetchuimsg = true]) {
-    mCode = 0;
+    mCode = cdoe;
     mMsg = okstr;
     mUIMsg = fetchuimsg ? okstr : null;
     mData = null;
