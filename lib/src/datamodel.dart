@@ -26,7 +26,7 @@ class SResBase<T> {
   T mData;
 
   ///创建通用对象,添加成功的描述
-  SResBase.infoWithOKString(String okstr, [cdoe = 0, fetchuimsg = true]) {
+  SResBase.infoWithOKString(String okstr, [cdoe = 0, fetchuimsg = false]) {
     mCode = cdoe;
     mMsg = okstr;
     mUIMsg = fetchuimsg ? okstr : null;
@@ -34,7 +34,7 @@ class SResBase<T> {
   }
 
   ///创建通用对象,添加失败的描述,错误码默认1
-  SResBase.infoWithErrorString(String errstr, [cdoe = 1, fetchuimsg = true]) {
+  SResBase.infoWithErrorString(String errstr, [cdoe = 1, fetchuimsg = false]) {
     mCode = cdoe;
     mMsg = errstr;
     mUIMsg = fetchuimsg ? errstr : null;
