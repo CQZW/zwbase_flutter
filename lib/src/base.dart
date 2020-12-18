@@ -251,8 +251,13 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
       ],
       localeResolutionCallback: onGetLocalInfo,
       supportedLocales: getSupportedLocals(),
+      navigatorObservers: getNavObservers(),
       //locale: ,先不考虑那么复杂的情况,本地这个就先不管了,遇到书写顺序有问题的再说
     );
+  }
+
+  List<NavigatorObserver> getNavObservers() {
+    return null;
   }
 
   ///当获取到区域信息之后的回调
@@ -475,10 +480,9 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
     to.bHasNavView = this.bHasNavView || bIsNavRootVC;
     to.bIsPresent = this.bIsPresent;
     return Navigator.of(this._context).push(MaterialPageRoute(
+        settings: RouteSettings(name: to.mPageName),
         maintainState: true,
-        builder: (context) {
-          return to.getView();
-        }));
+        builder: (context) => to.getView()));
   }
 
   ///PUSH到指定VC,并且有返回异步返回值,淡入动画,
@@ -515,10 +519,9 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
       Navigator.pushReplacement(
           this._context,
           MaterialPageRoute(
+              settings: RouteSettings(name: to.mPageName),
               maintainState: true,
-              builder: (context) {
-                return to.getView();
-              }));
+              builder: (context) => to.getView()));
     } else {
       log("can not replace root view");
     }
@@ -536,11 +539,10 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
     to.bHasNavView = this.bHasNavView || bIsNavRootVC;
     to._presentMeContext = this._context;
     return Navigator.of(this._context).push(MaterialPageRoute(
+        settings: RouteSettings(name: to.mPageName),
         fullscreenDialog: true,
         maintainState: true,
-        builder: (context) {
-          return to.getView();
-        }));
+        builder: (context) => to.getView()));
   }
 
   ///消失 presentVC来的VC
