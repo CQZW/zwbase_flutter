@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
+import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
@@ -37,7 +39,14 @@ abstract class NetWapper {
 
   void initNetWapper(BaseOptions opt) {
     dio = Dio(opt);
+    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
+        (client) {
+      client.badCertificateCallback = verificationCert;
+    };
   }
+
+  //证书校验
+  bool verificationCert(X509Certificate cert, String host, int port) => true;
 
   ///获取认证token
   Future<String> getToken(); // => '';
