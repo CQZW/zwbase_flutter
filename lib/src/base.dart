@@ -490,6 +490,7 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
     to.bHasNavView = this.bHasNavView || bIsNavRootVC;
     to.bIsPresent = this.bIsPresent;
     return Navigator.of(this._context).push(PageRouteBuilder(
+      settings: RouteSettings(name: to.mPageName),
       transitionDuration: Duration(milliseconds: 500),
       pageBuilder: (context, animation, secondaryAnimation) {
         return new FadeTransition(
@@ -506,8 +507,9 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
     to.mBackGroudColor = Colors.transparent;
     to.bHasNavView = this.bHasNavView || bIsNavRootVC;
     to.bIsPresent = this.bIsPresent;
-    return Navigator.of(this._context)
-        .push(CustomTransitionRoute((context) => to.getView()));
+    return Navigator.of(this._context).push(CustomTransitionRoute(
+        (context) => to.getView(),
+        settings: RouteSettings(name: to.mPageName)));
   }
   //更多路由动画. https://www.cnblogs.com/joe235/p/11230780.html
 
@@ -1051,7 +1053,9 @@ class ZWTickBt extends ViewCtr {
 
 ///自定义的过度路由,主要是创建透明的路由页面
 class CustomTransitionRoute extends PageRoute {
-  CustomTransitionRoute(this.builder, {this.transitBuilder}) : super();
+  CustomTransitionRoute(this.builder,
+      {this.transitBuilder, RouteSettings settings})
+      : super(settings: settings);
   final WidgetBuilder builder;
   final RouteTransitionsBuilder transitBuilder;
 
