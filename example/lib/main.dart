@@ -55,7 +55,74 @@ class prjNetWapper extends NetWapper {
   }
 }
 
-class HomeVC extends BaseVC {
+abstract class PrjBaseVC extends BaseVC {
+  final NavigatorObserver ob = testNavObs();
+  List<NavigatorObserver> getNavObservers() {
+    return [ob];
+  }
+
+  Future<dynamic> pushToVC(BaseVC to) {
+    to.bHasNavView = this.bHasNavView || bIsNavRootVC;
+    to.bIsPresent = this.bIsPresent;
+    return Navigator.of(getContext()).push(MaterialPageRoute(
+        settings: RouteSettings(name: to.mPageName),
+        maintainState: true,
+        builder: (context) => to.getView()));
+  }
+}
+
+class testNavObs extends NavigatorObserver {
+  /// The [Navigator] pushed `route`.
+  ///
+  /// The route immediately below that one, and thus the previously active
+  /// route, is `previousRoute`.
+  void didPush(Route<dynamic> route, Route<dynamic> previousRoute) {
+    log('didPush');
+  }
+
+  /// The [Navigator] popped `route`.
+  ///
+  /// The route immediately below that one, and thus the newly active
+  /// route, is `previousRoute`.
+  void didPop(Route<dynamic> route, Route<dynamic> previousRoute) {
+    log('didPop');
+  }
+
+  /// The [Navigator] removed `route`.
+  ///
+  /// If only one route is being removed, then the route immediately below
+  /// that one, if any, is `previousRoute`.
+  ///
+  /// If multiple routes are being removed, then the route below the
+  /// bottommost route being removed, if any, is `previousRoute`, and this
+  /// method will be called once for each removed route, from the topmost route
+  /// to the bottommost route.
+  void didRemove(Route<dynamic> route, Route<dynamic> previousRoute) {
+    log('didRemove');
+  }
+
+  /// The [Navigator] replaced `oldRoute` with `newRoute`.
+  void didReplace({Route<dynamic> newRoute, Route<dynamic> oldRoute}) {
+    log('didReplace');
+  }
+
+  /// The [Navigator]'s routes are being moved by a user gesture.
+  ///
+  /// For example, this is called when an iOS back gesture starts, and is used
+  /// to disabled hero animations during such interactions.
+  void didStartUserGesture(Route<dynamic> route, Route<dynamic> previousRoute) {
+    log('didStartUserGesture');
+  }
+
+  /// User gesture is no longer controlling the [Navigator].
+  ///
+  /// Paired with an earlier call to [didStartUserGesture].
+  void didStopUserGesture() {
+    log('didStopUserGesture');
+  }
+}
+
+class HomeVC extends PrjBaseVC {
   HomeVC() : super() {
     // int x = 0;
     // do {
@@ -208,7 +275,7 @@ class HomeVC extends BaseVC {
   }
 }
 
-class MeVC extends BaseVC {
+class MeVC extends PrjBaseVC {
   int _testv = 1;
   Widget makePageBody(BuildContext context) {
     return Center(
@@ -311,7 +378,7 @@ class MeVC extends BaseVC {
   }
 }
 
-class ForPush extends BaseVC {
+class ForPush extends PrjBaseVC {
   int itid = 0;
   @override
   Widget makePageBody(BuildContext context) {

@@ -234,7 +234,7 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
       fit: StackFit.expand,
       alignment: Alignment.center,
     );
-
+    //每个VC 返回 MaterialApp 可以控制全部的屏幕部分,否则导航栏部分无法控制的,如果要全屏的就...
     return MaterialApp(
       title: BaseVC.mappname,
       home: t,
@@ -252,6 +252,7 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
       localeResolutionCallback: onGetLocalInfo,
       supportedLocales: getSupportedLocals(),
       navigatorObservers: getNavObservers(),
+      initialRoute: '/abc',
       //locale: ,先不考虑那么复杂的情况,本地这个就先不管了,遇到书写顺序有问题的再说
     );
   }
