@@ -50,11 +50,6 @@ abstract class ViewCtr {
     _state?.setState(() {});
   }
 
-  ///初始化控制器,子类自己初始化完成之后,调用父类
-  ///inited 告诉父类,是否初始化完成了,可以显示了,
-  ///如果false,那么后续尽快调用 allInitOK,否则 realBuildWidget 不会被执行
-  ///如果ture,那么表明都初始化完成了,会按流程执行 realBuildWidget
-  ///这里这样设计原因是,需要找到一个异步加载APP运行必须要的数据的机会,
   @mustCallSuper
   void onInitVC() {
     vclog("onInitVC");
@@ -234,7 +229,8 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
       fit: StackFit.expand,
       alignment: Alignment.center,
     );
-    //每个VC 返回 MaterialApp 可以控制全部的屏幕部分,否则导航栏部分无法控制的,如果要全屏的就...
+    //每个VC 返回 MaterialApp 可以控制全部的屏幕部分,
+    //否则导航栏部分无法控制的,比如全屏的HUD就没办法了
     return MaterialApp(
       title: BaseVC.mappname,
       home: t,
@@ -252,7 +248,6 @@ abstract class BaseVC extends ViewCtr implements ZWListVCDelegate {
       localeResolutionCallback: onGetLocalInfo,
       supportedLocales: getSupportedLocals(),
       navigatorObservers: getNavObservers(),
-      initialRoute: '/abc',
       //locale: ,先不考虑那么复杂的情况,本地这个就先不管了,遇到书写顺序有问题的再说
     );
   }

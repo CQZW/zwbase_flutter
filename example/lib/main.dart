@@ -56,7 +56,10 @@ class prjNetWapper extends NetWapper {
 }
 
 abstract class PrjBaseVC extends BaseVC {
-  final NavigatorObserver ob = testNavObs();
+  PrjBaseVC() {
+    ob = testNavObs(this);
+  }
+  NavigatorObserver ob;
   List<NavigatorObserver> getNavObservers() {
     return [ob];
   }
@@ -71,7 +74,13 @@ abstract class PrjBaseVC extends BaseVC {
   }
 }
 
+///得出结论,这里 route 无法包含 name的参数,具体原因估计是这个基类每次返回都是MaterialApp,
+///而不是 Scaffold,导致导航控制器有问题,
+///所以统计类,需要单独处理下
 class testNavObs extends NavigatorObserver {
+  testNavObs(this.vvvv);
+  PrjBaseVC vvvv;
+
   /// The [Navigator] pushed `route`.
   ///
   /// The route immediately below that one, and thus the previously active
